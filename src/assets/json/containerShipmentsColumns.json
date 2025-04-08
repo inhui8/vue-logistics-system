@@ -1,0 +1,90 @@
+[
+  { "prop": "containerNumber", "label": "集装箱号", "width": 140, "sortable": true, "filterType": "text" },
+  { "prop": "shippingNumber", "label": "运单号", "width": 140, "sortable": true, "filterType": "text" },
+  { "prop": "customerService", "label": "客服", "width": 100, "sortable": true, "filterType": "text" },
+  { "prop": "originalAddress", "label": "原地址信息", "width": 180, "sortable": true, "filterType": "text" },
+  { "prop": "address", "label": "地址", "width": 180, "sortable": true, "filterType": "text" },
+  { "prop": "city", "label": "City", "width": 120, "sortable": true, "filterType": "text" },
+  { "prop": "state", "label": "State", "width": 100, "sortable": true, "filterType": "text" },
+  { "prop": "zipCode", "label": "Zip_Code", "width": 120, "sortable": true, "filterType": "text" },
+  { 
+    "prop": "deliveryArea", 
+    "label": "派送区域", 
+    "width": 120, 
+    "sortable": true, 
+    "filterType": "select",
+    "filterOptions": [
+      { "label": "城区", "value": "城区" },
+      { "label": "郊区", "value": "郊区" },
+      { "label": "远郊", "value": "远郊" },
+      { "label": "跨州", "value": "跨州" }
+    ]
+  },
+  { "prop": "warehouseCode", "label": "仓库代码", "width": 120, "sortable": true, "filterType": "text" },
+  { 
+    "prop": "channel", 
+    "label": "渠道", 
+    "width": 100, 
+    "sortable": true, 
+    "filterType": "select",
+    "filterOptions": [
+      { "label": "海运", "value": "海运" },
+      { "label": "空运", "value": "空运" },
+      { "label": "铁路", "value": "铁路" },
+      { "label": "公路", "value": "公路" }
+    ]
+  },
+  { "prop": "boxCount", "label": "箱数", "width": 80, "sortable": true, "filterType": "number" },
+  { "prop": "weight", "label": "重重", "width": 100, "sortable": true, "filterType": "number" },
+  { "prop": "volume", "label": "方数", "width": 100, "sortable": true, "filterType": "number" },
+  { "prop": "palletCount", "label": "板数", "width": 80, "sortable": true, "filterType": "number" },
+  { "prop": "location", "label": "库位", "width": 100, "sortable": true, "filterType": "text" },
+  { "prop": "eta", "label": "ETA", "width": 140, "sortable": true, "filterType": "date" },
+  { "prop": "containerPickupTime", "label": "提柜时间", "width": 140, "sortable": true, "filterType": "datetime" },
+  { "prop": "arrivalTime", "label": "抵仓时间", "width": 140, "sortable": true, "filterType": "datetime" },
+  { "prop": "expectedUnpackingTime", "label": "预计拆柜时间", "width": 160, "sortable": true, "filterType": "datetime" },
+  { "prop": "unpackingCompletedTime", "label": "拆柜完成时间", "width": 160, "sortable": true, "filterType": "datetime" },
+  { "prop": "appointmentNumber", "label": "预约号", "width": 120, "sortable": true, "filterType": "text" },
+  { "prop": "deliveryAppointmentTime", "label": "派送预约时间", "width": 160, "sortable": true, "filterType": "datetime" },
+  { "prop": "deliveryTime", "label": "送货时间", "width": 140, "sortable": true, "filterType": "datetime" },
+  { "prop": "deliveryCompany", "label": "送货公司", "width": 140, "sortable": true, "filterType": "text" },
+  { "prop": "deliveryDriver", "label": "送货司机", "width": 120, "sortable": true, "filterType": "text" },
+  { "prop": "driverPhone", "label": "司机电话", "width": 120, "sortable": true, "filterType": "text" },
+  { "prop": "pcNumber", "label": "PC号", "width": 120, "sortable": true, "filterType": "text" },
+  { 
+    "prop": "appointmentStatus", 
+    "label": "预约状态", 
+    "width": 120, 
+    "sortable": true, 
+    "filterType": "select",
+    "type": "status",
+    "options": [
+      { "value": "未预约", "type": "info" },
+      { "value": "已预约", "type": "warning" },
+      { "value": "已确认", "type": "primary" },
+      { "value": "已抵达", "type": "success" },
+      { "value": "已取消", "type": "danger" }
+    ],
+    "filterOptions": [
+      { "label": "未预约", "value": "未预约" },
+      { "label": "已预约", "value": "已预约" },
+      { "label": "已确认", "value": "已确认" },
+      { "label": "已抵达", "value": "已抵达" },
+      { "label": "已取消", "value": "已取消" }
+    ]
+  },
+  { "prop": "tags", "label": "标签", "width": 120, "sortable": false, "filterType": "select", "type": "tags" },
+  { "prop": "followUpRecord", "label": "跟进记录", "width": 150, "sortable": false, "filterType": "text" },
+  { "prop": "remarks", "label": "MEMO", "width": 150, "sortable": false, "filterType": "text" },
+  { "prop": "internalRemarks", "label": "内部备注", "width": 150, "sortable": false, "filterType": "text" },
+  { "prop": "quotationLianyu", "label": "报价(联宇)", "width": 150, "sortable": true, "filterType": "number" },
+  { "prop": "shippingMark", "label": "唛头", "width": 120, "sortable": true, "filterType": "text" },
+  { "prop": "platformQuotation", "label": "询价平台报价", "width": 150, "sortable": true, "filterType": "number" },
+  {
+    "prop": "podPhoto",
+    "label": "POD照片",
+    "width": "120",
+    "sortable": true
+  },
+  { "prop": "operation", "label": "操作", "width": 150, "fixed": "right", "sortable": false, "type": "operation" }
+] 

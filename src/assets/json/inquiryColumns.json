@@ -1,0 +1,27 @@
+[
+  { "prop": "id", "label": "询价单号", "width": 150, "sortable": true, "filterType": "text" },
+  { "prop": "orderNumber", "label": "订单号", "width": 150, "sortable": true, "filterType": "text" },
+  { "prop": "orderType", "label": "订单类型", "width": 120, "sortable": true, "filterType": "select", 
+    "filterOptions": [
+      { "label": "FBA派送", "value": "FBA" },
+      { "label": "提柜服务", "value": "PICKUP" },
+      { "label": "派送服务", "value": "DELIVERY" },
+      { "label": "仓储服务", "value": "WAREHOUSE" }
+    ]
+  },
+  { "prop": "serviceDescription", "label": "服务需求描述", "min-width": 250, "sortable": true, "filterType": "text" },
+  { "prop": "initiator", "label": "发起人", "width": 120, "sortable": true, "filterType": "text" },
+  { "prop": "createdAt", "label": "创建时间", "width": 160, "sortable": true, "filterType": "datetime" },
+  { "prop": "deadline", "label": "报价截止时间", "width": 160, "sortable": true, "filterType": "datetime" },
+  { "prop": "supplierCount", "label": "受邀供应商数", "width": 130, "sortable": true, "filterType": "number" },
+  { "prop": "quoteCount", "label": "已报价数", "width": 110, "sortable": true, "filterType": "number" },
+  { "prop": "status", "label": "状态", "width": 130, "sortable": true, "filterType": "select",
+    "filterOptions": [
+      { "label": "询价中", "value": "inquiring" },
+      { "label": "报价收集完成", "value": "quoted" },
+      { "label": "已授标", "value": "awarded" },
+      { "label": "已取消", "value": "cancelled" }
+    ]
+  },
+  { "prop": "operation", "label": "操作", "width": 200, "fixed": "right", "sortable": false }
+] 

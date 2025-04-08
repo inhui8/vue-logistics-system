@@ -1,0 +1,44 @@
+/* 防止 ResizeObserver 循环错误 */
+* {
+  max-height: 10000px; /* 防止浏览器频繁计算高度 */
+}
+
+/* 修复 Element Plus 表格的布局问题 */
+.el-table,
+.el-table__inner-wrapper,
+.el-table__header-wrapper,
+.el-table__body-wrapper {
+  overflow: hidden !important;
+  contain: content !important;
+}
+
+.el-table__body {
+  will-change: auto !important;
+  contain: content !important;
+}
+
+/* 修复 Element Plus 抽屉的布局问题 */
+.el-drawer__container,
+.el-drawer__body {
+  contain: content !important;
+  overflow: hidden !important;
+}
+
+/* 修复标签页的布局问题 */
+.el-tabs__nav,
+.el-tabs__item {
+  contain: layout !important;
+}
+
+/* 给表格单元格中的内容添加保护 */
+.el-table .cell {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* 确保操作区域隔离事件 */
+.el-table .el-button {
+  position: relative !important;
+  z-index: 1 !important;
+} 

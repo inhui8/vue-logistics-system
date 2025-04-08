@@ -1,0 +1,139 @@
+[
+  {
+    "prop": "orderNumber",
+    "label": "订单号",
+    "width": "150",
+    "sortable": true
+  },
+  {
+    "prop": "orderStatus",
+    "label": "订单状态",
+    "width": "120",
+    "sortable": true,
+    "filterOptions": [
+      { "value": "已备货", "label": "已备货" },
+      { "value": "已预约", "label": "已预约" },
+      { "value": "司机已check in", "label": "司机已check in" },
+      { "value": "司机已提走", "label": "司机已提走" },
+      { "value": "部分送达", "label": "部分送达" },
+      { "value": "已送达", "label": "已送达" },
+      { "value": "已发POD", "label": "已发POD" }
+    ]
+  },
+  {
+    "prop": "prepareTime",
+    "label": "是否备货",
+    "width": "160",
+    "sortable": true,
+    "filterOptions": [
+      { "value": "已备货", "label": "已备货" },
+      { "value": "未备货", "label": "未备货" }
+    ]
+  },
+  {
+    "prop": "loadingType",
+    "label": "装车类型",
+    "width": "160",
+    "sortable": true,
+    "filterOptions": [
+      { "value": "整车", "label": "整车" },
+      { "value": "散板", "label": "散板" },
+      { "value": "一提多卸", "label": "一提多卸" },
+      { "value": "多提一卸", "label": "多提一卸" },
+      { "value": "多提多卸", "label": "多提多卸" }
+    ]
+  },
+  {
+    "prop": "goodsType",
+    "label": "货物类型",
+    "width": "160",
+    "sortable": true,
+    "filterOptions": [
+      { "value": "卡板", "label": "卡板" },
+      { "value": "地板", "label": "地板" },
+      { "value": "混装", "label": "混装" },
+      { "value": "快递", "label": "快递" }
+    ]
+  },
+  {
+    "prop": "appointmentTime",
+    "label": "提货预约时间",
+    "width": "160",
+    "sortable": true,
+    "editable": true,
+    "type": "datetime"
+  },
+  {
+    "prop": "loadingFinishTime",
+    "label": "装货完成时间",
+    "width": "160",
+    "sortable": true,
+    "editable": true,
+    "type": "datetime"
+  },
+  {
+    "prop": "specialRequirements",
+    "label": "特殊要求",
+    "width": "160",
+    "sortable": true
+  },
+  {
+    "prop": "remarks",
+    "label": "供应商备注",
+    "width": "150",
+    "sortable": true
+  },
+  {
+    "prop": "DockNumber",
+    "label": "Dock号",
+    "width": "150",
+    "sortable": true
+  },
+  {
+    "prop": "vehicleAssignment",
+    "label": "派送车牌",
+    "width": "120",
+    "sortable": true,
+    "editable": true
+  },
+  {
+    "prop": "driver",
+    "label": "司机",
+    "width": "100",
+    "sortable": true,
+    "editable": true,
+    "type": "select",
+    "options": [
+      { "value": "张三", "label": "张三" },
+      { "value": "李四", "label": "李四" },
+      { "value": "王五", "label": "王五" },
+      { "value": "赵六", "label": "赵六" }
+    ]
+  },
+  {
+    "prop": "driverPhone",
+    "label": "司机电话",
+    "width": "120",
+    "sortable": true,
+    "editable": true,
+    "type": "input"
+  },
+  {
+    "prop": "DriverLicense",
+    "label": "司机驾照",
+    "width": "150",
+    "sortable": true
+  },
+  {
+    "prop": "SealNumber",
+    "label": "封条号",
+    "width": "150",
+    "sortable": true
+  },
+  {
+    "prop": "operation",
+    "label": "操作",
+    "width": "120",
+    "fixed": "right"
+  }
+] 

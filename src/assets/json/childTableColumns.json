@@ -1,0 +1,17 @@
+[
+  { "prop": "pcNumber", "label": "PC号", "width": 120, "sortable": true },
+  { "prop": "bookingParty", "label": "预约方", "width": 120, "sortable": true },
+  { "prop": "bookingTime", "label": "预约时间", "width": 160, "sortable": true },
+  { "prop": "bookingNumber", "label": "预约号", "width": 120, "sortable": true },
+  { "prop": "startWarehouse", "label": "起始仓库", "width": 120, "sortable": true },
+  { "prop": "destination", "label": "目的地", "width": 150, "sortable": true },
+  { "prop": "palletCount", "label": "板数", "width": 100, "sortable": true },
+  { "prop": "weight", "label": "重量", "width": 100, "sortable": true },
+  { "prop": "rank", "label": "优先级", "width": 100, "sortable": true },
+  { "prop": "volume", "label": "方数", "width": 100, "sortable": true },
+  { "prop": "DriverStartTime", "label": "司机出发时间", "width": 120, "sortable": true, "filterType": "datetime" },
+  { "prop": "DriverEndTime", "label": "司机到达时间", "width": 120, "sortable": true, "filterType": "datetime" },
+  { "prop": "Arrived", "label": "交仓完成时间", "width": 120, "sortable": true, "filterType": "datetime" },
+  { "prop": "podImage", "label": "POD图片", "width": 150, "sortable": false, "filterType": "image", "type": "image" },
+  { "prop": "operation", "label": "操作", "width": 150, "fixed": "right", "sortable": false, "type": "operation" }
+] 

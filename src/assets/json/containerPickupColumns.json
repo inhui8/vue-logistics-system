@@ -1,0 +1,167 @@
+[
+  {
+    "prop": "orderNumber",
+    "label": "订单号",
+    "width": "150",
+    "sortable": true
+  },
+  {
+    "prop": "orderStatus",
+    "label": "订单状态",
+    "width": "120",
+    "sortable": true,
+    "filterOptions": [
+      { "value": "已受理", "label": "已受理" },
+      { "value": "已卸船", "label": "已卸船" },
+      { "value": "已可提", "label": "已可提" },
+      { "value": "已做提柜预约", "label": "已做提柜预约" },
+      { "value": "已提", "label": "已提" },
+      { "value": "已到仓", "label": "已到仓" },
+      { "value": "已拆柜", "label": "已拆柜" },
+      { "value": "已还柜", "label": "已还柜" }
+    ]
+  },
+  {
+    "prop": "unloadingTime",
+    "label": "卸船时间",
+    "width": "160",
+    "sortable": true
+  },
+  {
+    "prop": "availableTime",
+    "label": "available时间",
+    "width": "160",
+    "sortable": true
+  },
+  {
+    "prop": "pickupAppointmentTime",
+    "label": "提柜预约时间",
+    "width": "160",
+    "sortable": true,
+    "editable": true,
+    "type": "datetime"
+  },
+  {
+    "prop": "requiredPickupTime",
+    "label": "计划回仓时间",
+    "width": "160",
+    "sortable": true
+  },
+  {
+    "prop": "requiredReturnTime",
+    "label": "要求回仓时间",
+    "width": "160",
+    "sortable": true
+  },
+  {
+    "prop": "pickupTime",
+    "label": "提柜时间",
+    "width": "160",
+    "sortable": true,
+    "editable": true,
+    "type": "datetime"
+  },
+  {
+    "prop": "arrivalTime",
+    "label": "到仓时间",
+    "width": "160",
+    "sortable": true
+  },
+  {
+    "prop": "unpackingTime",
+    "label": "拆柜时间",
+    "width": "160",
+    "sortable": true
+  },
+  {
+    "prop": "unpackingProgress",
+    "label": "拆柜进度",
+    "width": "120",
+    "sortable": true
+  },
+  {
+    "prop": "emptyPickupTime",
+    "label": "提空时间",
+    "width": "160",
+    "sortable": true,
+    "editable": true,
+    "type": "datetime"
+  },
+  {
+    "prop": "emptyReturnTime",
+    "label": "还空时间",
+    "width": "160",
+    "sortable": true,
+    "editable": true,
+    "type": "datetime"
+  },
+
+  {
+    "prop": "remarks",
+    "label": "供应商备注",
+    "width": "150",
+    "sortable": true
+  },
+  {
+    "prop": "vehicleAssignment",
+    "label": "派送车牌",
+    "width": "120",
+    "sortable": true,
+    "editable": true
+  },
+  {
+    "prop": "driver",
+    "label": "司机",
+    "width": "100",
+    "sortable": true,
+    "editable": true,
+    "type": "select",
+    "options": [
+      { "value": "张三", "label": "张三" },
+      { "value": "李四", "label": "李四" },
+      { "value": "王五", "label": "王五" },
+      { "value": "赵六", "label": "赵六" }
+    ]
+  },
+  {
+    "prop": "deliveryLevel",
+    "label": "派送等级",
+    "width": "150",
+    "sortable": true,
+    "editable": true,
+    "type": "select",
+    "options": [
+      { "value": "T1", "label": "T1" },
+      { "value": "T2", "label": "T2" },
+      { "value": "T3", "label": "T3" },
+      { "value": "T4", "label": "T4" }
+    ]
+  },
+  {
+    "prop": "driverPhone",
+    "label": "司机电话",
+    "width": "120",
+    "sortable": true,
+    "editable": true,
+    "type": "input"
+  },
+  {
+    "prop": "containerType",
+    "label": "海柜类型",
+    "width": "120",
+    "sortable": true,
+    "editable": false
+  },
+  {
+    "prop": "podPhoto",
+    "label": "POD照片",
+    "width": "120",
+    "sortable": true
+  },
+  {
+    "prop": "operation",
+    "label": "操作",
+    "width": "120",
+    "fixed": "right"
+  }
+] 

@@ -1,0 +1,96 @@
+[
+  { "prop": "trainNumber", "label": "车次号", "width": 140, "sortable": true, "filterType": "text" },
+  { "prop": "issueDate", "label": "出单日期", "width": 120, "sortable": true, "filterType": "date" },
+  { "prop": "issuer", "label": "出单人", "width": 100, "sortable": true, "filterType": "text" },
+
+  { 
+    "prop": "loadingType", 
+    "label": "装车类型", 
+    "width": 120, 
+    "sortable": true, 
+    "filterType": "select",
+    "filterOptions": [
+      { "label": "卡板", "value": "卡板" },
+      { "label": "地板", "value": "地板" },
+      { "label": "混装", "value": "混装" },
+      { "label": "快递", "value": "快递" }
+    ]
+  },
+  { 
+    "prop": "deliveryType", 
+    "label": "派送类型", 
+    "width": 120, 
+    "sortable": true, 
+    "filterType": "select",
+    "filterOptions": [
+      { "label": "整车", "value": "整车" },
+      { "label": "散板", "value": "散板" },
+      { "label": "一提多卸", "value": "一提多卸" },
+      { "label": "多提一卸", "value": "多提一卸" },
+      { "label": "多提多卸", "value": "多提多卸" },
+      { "label": "快递", "value": "快递" }
+    ]
+  },
+  { 
+    "prop": "deliveryArea", 
+    "label": "派送区域", 
+    "width": 120, 
+    "sortable": true, 
+    "filterType": "select",
+    "filterOptions": [
+      { "label": "Local", "value": "Local" },
+      { "label": "中长途", "value": "中长途" },
+      { "label": "长途", "value": "长途" }
+    ]
+  },
+  { "prop": "driverRegisterTime", "label": "司机登记时间", "width": 160, "sortable": true, "filterType": "datetime" },
+  { "prop": "loadingStartTime", "label": "装车开始时间", "width": 160, "sortable": true, "filterType": "datetime" },
+  { "prop": "loadingEndTime", "label": "装车结束时间", "width": 160, "sortable": true, "filterType": "datetime" },
+  { "prop": "carNumber", "label": "车厢号", "width": 100, "sortable": true, "filterType": "text" },
+  { "prop": "loader", "label": "装车人", "width": 100, "sortable": true, "filterType": "text" },
+  { "prop": "dockNumber", "label": "DOCK号", "width": 120, "sortable": true, "filterType": "text" },
+  { 
+    "prop": "loadingStatus", 
+    "label": "装车状态", 
+    "width": 120, 
+    "sortable": true, 
+    "filterType": "select",
+    "type": "status",
+    "options": [
+      { "value": "未装车", "type": "info" },
+      { "value": "已登记", "type": "warning" },
+      { "value": "装车中", "type": "warning" },
+      { "value": "装车完成", "type": "success" },
+      { "value": "交仓中", "type": "warning" },
+      { "value": "交仓完成", "type": "success" },
+      { "value": "POD回传", "type": "success" }
+    ],
+    "filterOptions": [
+      { "label": "未装车", "value": "未装车" },
+      { "label": "已登记", "value": "已登记" },
+      { "label": "装车中", "value": "装车中" },
+      { "label": "装车完成", "value": "装车完成" },
+      { "label": "交仓中", "value": "交仓中" },
+      { "label": "交仓完成", "value": "交仓完成" },
+      { "label": "POD回传", "value": "POD回传" }
+    ]
+  },
+  { "prop": "warehouseRemarks", "label": "调度备注", "width": 150, "sortable": false, "filterType": "text" },
+  { "prop": "driverLicense", "label": "司机驾照", "width": 120, "sortable": true, "filterType": "text" },
+  { "prop": "driverName", "label": "司机名字", "width": 120, "sortable": true, "filterType": "text" },
+  { "prop": "licensePlate", "label": "司机车牌号", "width": 120, "sortable": true, "filterType": "text" },
+  { "prop": "driverPhone", "label": "司机电话", "width": 120, "sortable": true, "filterType": "text" },
+  { "prop": "OPName", "label": "出单人", "width": 120, "sortable": true, "filterType": "text" },
+  { "prop": "supplier", "label": "提货供应商", "width": 150, "sortable": true, "filterType": "text" },
+  { "prop": "actualPallets", "label": "实际出库板数", "width": 140, "sortable": true, "filterType": "number" },
+  { "prop": "palletsMerged", "label": "合板数量", "width": 120, "sortable": true, "filterType": "number" },
+  { "prop": "loadingAppointmentTime", "label": "装车预约时间", "width": 160, "sortable": true, "filterType": "datetime" },
+  { "prop": "weight", "label": "重量", "width": 100, "sortable": true, "filterType": "number" },
+  { "prop": "cubicMeter", "label": "方数", "width": 100, "sortable": true, "filterType": "number" },
+  { "prop": "totalPallets", "label": "总板数", "width": 100, "sortable": true, "filterType": "number" },
+  { "prop": "deliveryCost", "label": "派送成本", "width": 120, "sortable": true, "filterType": "number" },
+  { "prop": "Memo", "label": "Memo", "width": 120, "sortable": true, "filterType": "text" },
+  { "prop": "Followup", "label": "跟进记录", "width": 120, "sortable": true, "filterType": "text" },
+  { "prop": "DriverStartTime", "label": "司机出发时间", "width": 120, "sortable": true, "filterType": "datetime" },
+  { "prop": "operation", "label": "操作", "width": 150, "fixed": "right", "sortable": false, "type": "operation" }
+] 

@@ -1,0 +1,100 @@
+{
+  "items": [
+    {
+      "id": "INQ-2403001",
+      "orderNumber": "ORD-2403001",
+      "orderType": "FBA",
+      "serviceDescription": "LAX 港 - ONT8 提柜 (需今日完成)",
+      "initiator": "仓库管理员X",
+      "createdAt": "2024-03-20 09:00:00",
+      "deadline": "2024-03-20 18:00:00",
+      "supplierCount": 3,
+      "quoteCount": 2,
+      "status": "inquiring",
+      "invitedSupplierIds": ["supplier_1", "supplier_2", "supplier_3"],
+      "quotes": [
+        {
+          "supplierId": "supplier_1",
+          "supplierName": "测试供应商A - 专做提框服务",
+          "price": 450.00,
+          "responseTime": "2024-03-20 10:30:00",
+          "remarks": "价格含税"
+        },
+        {
+          "supplierId": "supplier_2",
+          "supplierName": "测试供应商B - FBA派送专家",
+          "price": 480.00,
+          "responseTime": "2024-03-20 11:15:00",
+          "remarks": "含装卸费"
+        }
+      ],
+      "subOrders": [
+        {
+          "id": "SUB-ORD-2403001-1",
+          "orderNumber": "ORD-2403001",
+          "pcNumber": "PC-2403001-1",
+          "serviceType": "提柜",
+          "origin": "LAX",
+          "destination": "ONT8",
+          "status": "待报价"
+        },
+        {
+          "id": "SUB-ORD-2403001-2",
+          "orderNumber": "ORD-2403001",
+          "pcNumber": "PC-2403001-2",
+          "serviceType": "派送",
+          "origin": "ONT8",
+          "destination": "FBA",
+          "status": "待报价"
+        }
+      ]
+    },
+    {
+      "id": "INQ-2403002",
+      "orderNumber": "ORD-2403002",
+      "orderType": "PICKUP",
+      "serviceDescription": "LGB 港 - LAX9 提柜 (3日内)",
+      "initiator": "运营专员Y",
+      "createdAt": "2024-03-20 10:30:00",
+      "deadline": "2024-03-22 18:00:00",
+      "supplierCount": 4,
+      "quoteCount": 3,
+      "status": "quoted",
+      "invitedSupplierIds": ["supplier_1", "supplier_2", "supplier_3", "supplier_4"],
+      "quotes": [
+        {
+          "supplierId": "supplier_1",
+          "supplierName": "测试供应商A - 专做提框服务",
+          "price": 380.00,
+          "responseTime": "2024-03-20 14:20:00",
+          "remarks": "价格含税"
+        },
+        {
+          "supplierId": "supplier_3",
+          "supplierName": "测试供应商C - 全能型选手",
+          "price": 420.00,
+          "responseTime": "2024-03-20 15:45:00",
+          "remarks": "含装卸费"
+        },
+        {
+          "supplierId": "supplier_4",
+          "supplierName": "测试供应商D - 区域小霸王",
+          "price": 450.00,
+          "responseTime": "2024-03-20 16:30:00",
+          "remarks": "含装卸费"
+        }
+      ],
+      "subOrders": [
+        {
+          "id": "SUB-ORD-2403002-1",
+          "orderNumber": "ORD-2403002",
+          "pcNumber": "PC-2403002-1",
+          "serviceType": "提柜",
+          "origin": "LGB",
+          "destination": "LAX9",
+          "status": "已报价"
+        }
+      ]
+    }
+  ]
+} 

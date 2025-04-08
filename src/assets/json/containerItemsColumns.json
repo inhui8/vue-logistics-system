@@ -1,0 +1,8 @@
+[
+  { "prop": "itemCode", "label": "货件编码", "width": 140, "sortable": true },
+  { "prop": "trackingNumber", "label": "追踪编号", "width": 160, "sortable": true },
+  { "prop": "productName", "label": "货物名称", "width": 200, "sortable": true },
+  { "prop": "quantity", "label": "数量", "width": 100, "sortable": true },
+  { "prop": "weight", "label": "重量(KG)", "width": 120, "sortable": true },
+  { "prop": "volume", "label": "体积(CBM)", "width": 120, "sortable": true }
+] 
