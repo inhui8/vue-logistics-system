@@ -65,35 +65,166 @@
 - Vue Router 4
 - Element Plus
 - ES6+
+- VXE Table
+- Surely Table
+- @visactor/vtable
+- ECharts
+- FullCalendar
+- Dayjs
 
 ## 项目结构
 
 ```
 vue-logistics-system/
+│
 ├── public/                 # 静态资源
-│   └── index.html          # HTML模板
+│   ├── index.html          # HTML模板
+│   └── images/             # 图片资源
+│
 ├── src/                    # 源代码
-│   ├── assets/             # 资源文件
-│   │   └── data/           # 模拟数据
-│   ├── components/         # 组件
-│   │   └── logistics/      # 物流相关组件
-│   │       ├── DataTable.vue       # 数据表格组件
-│   │       ├── FilterPanel.vue     # 筛选面板组件
-│   │       ├── follow_up.vue       # 跟进记录组件
-│   │       └── AddTrainDialog.vue  # 添加车次对话框
-│   ├── views/              # 视图
-│   │   ├── Home.vue              # 首页
-│   │   ├── TMS/                  # 运输管理系统视图
-│   │   │   ├── OutgoingBatch.vue # 出库批次管理
-│   │   │   └── TrainDetail.vue   # 车次详情
-│   │   ├── FBX/                  # FBX相关视图
-│   │   │   └── FBX.vue           # FBX预约管理
-│   │   └── Dockyard.vue          # 海柜停车图
-│   ├── router/             # 路由
+│   │
+│   ├── assets/             # 静态资源
+│   │   ├── data/           # 批次数据
+│   │   └── json/           # 表格列配置和模拟数据
+│   │       ├── childTableColumns.json
+│   │       ├── containerPickupColumns.json
+│   │       ├── deliveryTrainsColumns.json
+│   │       └── ...
+│   │
+│   ├── components/         # 可复用组件
+│   │   ├── common/         # 通用组件
+│   │   │   └── tableSurely.vue   # Surely表格封装
+│   │   │
+│   │   ├── logistics/      # 物流相关组件
+│   │   │   ├── DataTable.vue      # 数据表格组件
+│   │   │   ├── FilterPanel.vue    # 筛选面板组件
+│   │   │   ├── follow_up.vue      # 跟进记录组件
+│   │   │   ├── GroupableTable.vue # 可分组表格组件
+│   │   │   ├── GroupableTableVisactor.vue # Visactor表格
+│   │   │   ├── GroupableTableVxe.vue      # VXE表格
+│   │   │   ├── TableToolbar.vue    # 表格工具栏
+│   │   │   ├── AddTrainDialog.vue  # 添加车次对话框
+│   │   │   ├── TrainFileUploadDialog.vue # 文件上传对话框
+│   │   │   ├── HistoryRecordDialog.vue   # 历史记录对话框
+│   │   │   ├── GpsTrackDialog.vue        # GPS跟踪对话框
+│   │   │   └── ...
+│   │   │
+│   │   ├── AppointmentModal.vue   # 预约模态框
+│   │   ├── Breadcrumb.vue         # 面包屑导航
+│   │   ├── MessageNotification.vue # 消息通知
+│   │   └── WarehouseForm.vue      # 仓库表单
+│   │
+│   ├── layout/             # 布局组件
+│   │   ├── BaseLayout.vue  # 基本布局
+│   │   ├── EmptyLayout.vue # 空布局
+│   │   ├── index.vue       # 主布局
+│   │   └── SubRouteLayout.vue # 子路由布局
+│   │
+│   ├── router/             # 路由配置
+│   │   └── index.js        # 路由定义
+│   │
 │   ├── store/              # Vuex状态管理
+│   │   └── index.js        # 状态定义
+│   │
+│   ├── types/              # TypeScript类型定义
+│   │   └── components.d.ts # 组件类型
+│   │
+│   ├── utils/              # 工具函数
+│   │   ├── error-handler.js # 错误处理
+│   │   ├── groupUtils.js    # 分组工具
+│   │   ├── time.js          # 时间处理
+│   │   └── validation.js    # 验证工具
+│   │
+│   ├── views/              # 页面视图
+│   │   ├── Admin/          # 后台管理页面
+│   │   │   ├── AlertManagement/    # 预警管理
+│   │   │   ├── ContractManagement/ # 合同管理
+│   │   │   ├── DriverManagement/   # 司机管理
+│   │   │   ├── GpsTracking/        # GPS追踪
+│   │   │   ├── OperationLog/       # 操作日志
+│   │   │   ├── QuoteManagement/    # 报价管理
+│   │   │   ├── RatingManagement/   # 评级管理
+│   │   │   ├── RoleManagement/     # 角色管理
+│   │   │   ├── SupplierManagement/ # 供应商管理
+│   │   │   ├── TagManagement/      # 标签管理
+│   │   │   └── VehicleManagement/  # 车辆管理
+│   │   │
+│   │   ├── Appointment/    # 预约管理
+│   │   │   ├── AppointmentList.vue      # 预约列表
+│   │   │   ├── AppointmentManagement.vue # 预约管理
+│   │   │   ├── CreateOutbound.vue        # 创建出库
+│   │   │   └── planManagement.vue        # 计划管理
+│   │   │
+│   │   ├── FBX/            # FBX相关视图
+│   │   │   ├── FBX.vue               # FBX预约管理
+│   │   │   ├── newFBX.vue            # 新版FBX
+│   │   │   ├── newFBXVisactor.vue    # Visactor表格FBX
+│   │   │   ├── CreateOutboundPC.vue  # PC创建出库
+│   │   │   ├── ExpenseDetails.vue    # 费用明细
+│   │   │   └── ExpenseDetails2.vue   # 费用明细(替代版)
+│   │   │
+│   │   ├── loadAppointment/ # 装货预约
+│   │   │   ├── appointment.vue   # 预约管理
+│   │   │   ├── apptHistory.vue   # 预约历史
+│   │   │   └── apptSet.vue       # 预约设置
+│   │   │
+│   │   ├── MessageCenter/  # 消息中心
+│   │   │   └── EmailManagement/ # 邮件管理
+│   │   │       ├── EmailAccount.vue  # 邮箱账户
+│   │   │       ├── EmailLog.vue      # 邮件日志
+│   │   │       └── EmailTemplate.vue # 邮件模板
+│   │   │
+│   │   ├── SMS/            # 短信/供应商系统
+│   │   │   ├── DeliveryOrders.vue      # 配送订单
+│   │   │   ├── SuppilerSeasOrder.vue   # 供应商海运订单
+│   │   │   ├── VehicleGpsTracking.vue  # 车辆GPS追踪
+│   │   │   ├── VehicleProfile.vue      # 车辆信息
+│   │   │   │
+│   │   │   └── PhoneApp/   # 手机应用
+│   │   │       ├── DriverDispatch.vue    # 司机派送
+│   │   │       ├── OutboundConfirm.vue   # 出库确认
+│   │   │       ├── Stocking.vue          # 入库
+│   │   │       ├── StockingConfirm.vue   # 入库确认
+│   │   │       └── StockingHistory.vue   # 入库历史
+│   │   │
+│   │   ├── TMS/            # 运输管理系统视图
+│   │   │   ├── DeliveryTrains.vue       # 派送车次
+│   │   │   ├── DriverCheckIn.vue        # 司机签到
+│   │   │   ├── OutgoingBatch.vue        # 出库批次
+│   │   │   ├── OutgoingBatchDetail.vue  # 批次详情
+│   │   │   └── TrainDetail.vue          # 车次详情
+│   │   │
+│   │   ├── WorkOrder/      # 工单管理
+│   │   │   ├── AlertWorkOrderList.vue       # 预警工单列表
+│   │   │   ├── CommandWorkCreate.vue        # 指令工单创建
+│   │   │   ├── CommandWorkDetail.vue        # 指令工单详情
+│   │   │   ├── CommandWorkList.vue          # 指令工单列表
+│   │   │   ├── CommandWorkOrderList.vue     # 指令工单订单列表
+│   │   │   ├── ExceptionWorkOrderList.vue   # 异常工单列表
+│   │   │   ├── ValueAddedWorkOrderList.vue  # 增值服务工单列表
+│   │   │   ├── WorkOrderAnalysis.vue        # 工单分析
+│   │   │   ├── WorkOrderCreate.vue          # 工单创建
+│   │   │   ├── WorkOrderDetail.vue          # 工单详情
+│   │   │   └── WorkOrderList.vue            # 工单列表
+│   │   │
+│   │   ├── tag/            # 标签管理
+│   │   │   └── TagManagement.vue      # 标签管理
+│   │   │
+│   │   ├── Home.vue        # 首页
+│   │   ├── Dockyard.vue    # 海柜停车图
+│   │   ├── LogisticsExample.vue # 物流示例
+│   │   ├── MessageDetail.vue    # 消息详情
+│   │   ├── MessageList.vue      # 消息列表
+│   │   ├── MessageManage.vue    # 消息管理
+│   │   └── TableSurelyDemo.vue  # 表格示例
+│   │
 │   ├── App.vue             # 根组件
+│   ├── index.css           # 全局样式
+│   ├── env.d.ts            # 环境变量类型定义
 │   └── main.js             # 入口文件
-└── package.json            # 项目依赖
+│
+├── .gitignore              # Git忽略文件
+└── package.json            # 项目依赖和脚本
 ```
 
 ## 安装和运行
@@ -152,6 +283,8 @@ npm run build
 ### 海柜停车图
 
 待开发...
+
+文件查看地址：https://graceful-tulumba-a8a4e0.netlify.app/
 
 ## 开发者
 
