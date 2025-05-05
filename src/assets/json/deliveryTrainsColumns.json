@@ -43,6 +43,24 @@
       { "label": "长途", "value": "长途" }
     ]
   },
+  {
+    "prop": "PrepareStartTime",
+    "label": "备货开始时间",
+    "width": "160",
+    "sortable": true,
+    "editable": true,
+    "type": "datetime"
+  },
+
+  {
+    "prop": "PrepareFinishTime",
+    "label": "备货完成时间",
+    "width": "160",
+    "sortable": true,
+    "editable": true,
+    "type": "datetime"
+  },
+  { "prop": "PreparePerson", "label": "备货人", "width": 100, "sortable": true, "filterType": "text" },
   { "prop": "driverRegisterTime", "label": "司机登记时间", "width": 160, "sortable": true, "filterType": "datetime" },
   { "prop": "loadingStartTime", "label": "装车开始时间", "width": 160, "sortable": true, "filterType": "datetime" },
   { "prop": "loadingEndTime", "label": "装车结束时间", "width": 160, "sortable": true, "filterType": "datetime" },

@@ -1,9 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/Home.vue'
 import AppointmentManagement from '../views/Appointment/AppointmentManagement.vue'
+import AppointmentList from '../views/Appointment/AppointmentList.vue'
 import TableSurelyDemo from '../views/TableSurelyDemo.vue'
 import TagList from '@/views/Admin/TagManagement/TagList.vue'
 import TagGroupList from '@/views/Admin/TagManagement/TagGroupList.vue'
+import ApptSet from '@/views/loadAppointment/apptSet.vue'
+import LoadAppointment from '@/views/loadAppointment/appointment.vue'
+import DriverCheckIn from '@/views/TMS/DriverCheckIn.vue'
+import BaseLayout from '@/layout/BaseLayout.vue'
+import { h } from 'vue'
+import { RouterView } from 'vue-router'
 
 const routes = [
   {
@@ -47,8 +54,22 @@ const routes = [
   {
     path: '/appointment',
     name: 'AppointmentMain',
-    component: Home,
-    meta: { title: '预约出库', icon: 'el-icon-date' }
+    component: () => import('../layout/BaseLayout.vue'),
+    meta: { title: '预约出库', icon: 'el-icon-date' },
+    children: [
+      {
+        path: 'list',
+        name: 'AppointmentList',
+        component: AppointmentList,
+        meta: { title: '预约出库', parentTitle: '尾程仓管' }
+      },
+      {
+        path: 'management',
+        name: 'AppointmentManagement',
+        component: AppointmentManagement,
+        meta: { title: '预约管理', parentTitle: '预约出库' }
+      }
+    ]
   },
   {
     path: '/inventory',
@@ -77,6 +98,19 @@ const routes = [
     meta: { title: 'FBX管理', icon: 'el-icon-tickets' }
   },
   {
+    path: '/newfbx-visactor',
+    name: 'NewFBXVisactorView',
+    component: () => import('../views/FBX/newFBXVisactor.vue'),
+    meta: { title: 'FBX管理(Visactor)', icon: 'el-icon-tickets' }
+  },
+  {
+    path: '/fbx/expenses/:id',
+    name: 'FBXExpenseDetails',
+    component: () => import('@/views/FBX/ExpenseDetails2.vue'),
+    meta: { title: '费用明细', parentTitle: 'FBX管理', icon: 'el-icon-money' },
+    props: true
+  },
+  {
     path: '/tms',
     name: 'TMSView',
     component: () => import('../views/TMS/OutgoingBatch.vue'),
@@ -92,19 +126,31 @@ const routes = [
     path: '/dispatch/outgoing-batch',
     name: 'OutgoingBatchDirectView',
     component: () => import('../views/TMS/OutgoingBatch.vue'),
-    meta: { title: '出库批次', parentTitle: '调度管理', icon: 'el-icon-box' }
+    meta: { title: '出库批次', parentTitle: '尾程仓管', icon: 'el-icon-box' }
   },
   {
     path: '/dispatch/delivery-trains',
     name: 'DeliveryTrainsView',
     component: () => import('../views/TMS/DeliveryTrains.vue'),
-    meta: { title: '派送车次', parentTitle: '调度管理', icon: 'el-icon-truck' }
+    meta: { title: '派送车次', parentTitle: '车辆派送', icon: 'el-icon-truck' }
   },
   {
     path: '/tms/delivery-train-detail/:id',
     name: 'DeliveryTrainDetailView',
     component: () => import('../views/TMS/TrainDetail.vue'),
     meta: { title: '车次详情', parentTitle: 'TMS系统', icon: 'el-icon-document' }
+  },
+  {
+    path: '/tms/outgoing-batch-detail/:id',
+    name: 'OutgoingBatchDetailView',
+    component: () => import('../views/TMS/OutgoingBatchDetail.vue'),
+    meta: { title: '出库批次详情', parentTitle: 'TMS系统', icon: 'el-icon-document' }
+  },
+  {
+    path: '/tms/driver-check-in',
+    name: 'DriverCheckIn',
+    component: DriverCheckIn,
+    meta: { title: '司机登记', parentTitle: '车辆派送', icon: 'el-icon-user' }
   },
   {
     path: '/logistics-example',
@@ -142,7 +188,46 @@ const routes = [
         path: 'appointment-management',
         name: 'SupplierAppointmentManagement',
         component: AppointmentManagement,
-        meta: { title: '预约管理', parentTitle: '供应商门户' }
+        meta: { title: '平台预约管理', parentTitle: '尾程仓管' }
+      },
+      {
+        path: 'mobile-app',
+        name: 'SupplierMobileApp',
+        component: () => import('../layout/BaseLayout.vue'),
+        meta: { title: '手机APP端', parentTitle: '供应商门户' },
+        redirect: '/supplier/mobile-app/driver-dispatch',
+        children: [
+          {
+            path: 'driver-dispatch',
+            name: 'DriverDispatchApp',
+            component: () => import('../views/SMS/PhoneApp/DriverDispatch.vue'),
+            meta: { title: '车辆派送', parentTitle: '手机APP端' }
+          },
+          {
+            path: 'stocking',
+            name: 'Stocking',
+            component: () => import('@/views/SMS/PhoneApp/Stocking.vue'),
+            meta: { title: '备货', parentTitle: '手机APP端' }
+          },
+          {
+            path: 'stocking-confirm/:trainId/:trainNumber',
+            name: 'StockingConfirm',
+            component: () => import('@/views/SMS/PhoneApp/StockingConfirm.vue'),
+            meta: { title: '确认备货', parentTitle: '手机APP端' }
+          },
+          {
+            path: 'stocking-history',
+            name: 'StockingHistory',
+            component: () => import('@/views/SMS/PhoneApp/StockingHistory.vue'),
+            meta: { title: '备货历史', parentTitle: '手机APP端' }
+          },
+          {
+            path: 'outbound',
+            name: 'Outbound',
+            component: () => import('@/views/SMS/PhoneApp/OutboundConfirm.vue'),
+            meta: { title: '出库', parentTitle: '手机APP端' }
+          }
+        ]
       }
     ]
   },
@@ -150,25 +235,73 @@ const routes = [
     path: '/messages',
     name: 'Messages',
     component: () => import('../layout/BaseLayout.vue'),
-    meta: { title: '消息管理', icon: 'message' },
+    meta: { title: '消息中心', icon: 'message' },
+    redirect: '/messages/list',
     children: [
       {
-        path: '',
+        path: 'list',
         name: 'MessageList',
         component: () => import('@/views/MessageList.vue'),
-        meta: { title: '消息列表', parentTitle: '消息管理' }
+        meta: { title: '消息列表', parentTitle: '消息中心' }
       },
       {
         path: 'detail',
         name: 'MessageDetail',
         component: () => import('@/views/MessageDetail.vue'),
-        meta: { title: '消息详情', parentTitle: '消息管理' }
+        meta: { title: '消息详情', parentTitle: '消息中心' }
       },
       {
         path: 'manage',
         name: 'MessageManage',
         component: () => import('@/views/MessageManage.vue'),
-        meta: { title: '消息管理', parentTitle: '消息管理' }
+        meta: { title: '消息管理配置', parentTitle: '消息中心' }
+      },
+      {
+        path: 'email-management',
+        name: 'EmailManagementParent',
+        component: { render: () => h(RouterView) },
+        meta: { title: '邮件管理', parentTitle: '消息中心' },
+        children: [
+          {
+            path: 'accounts',
+            name: 'EmailAccount',
+            component: () => import('@/views/MessageCenter/EmailManagement/EmailAccount.vue'),
+            meta: { title: '邮箱账号', parentTitle: '邮件管理' }
+          },
+          {
+            path: 'templates',
+            name: 'EmailTemplate',
+            component: () => import('@/views/MessageCenter/EmailManagement/EmailTemplate.vue'),
+            meta: { title: '邮件模板', parentTitle: '邮件管理' }
+          },
+          {
+            path: 'logs',
+            name: 'EmailLog',
+            component: () => import('@/views/MessageCenter/EmailManagement/EmailLog.vue'),
+            meta: { title: '邮件记录', parentTitle: '邮件管理' }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    path: '/load-appointment',
+    name: 'LoadAppointmentMain',
+    component: BaseLayout,
+    redirect: '/load-appointment/manage',
+    meta: { title: '提货预约', icon: 'el-icon-calendar' },
+    children: [
+      {
+        path: 'manage',
+        name: 'LoadAppointmentManage',
+        component: LoadAppointment,
+        meta: { title: '预约日历', parentTitle: '提货预约' }
+      },
+      {
+        path: 'settings',
+        name: 'LoadAppointmentSettings',
+        component: ApptSet,
+        meta: { title: '预约设置', parentTitle: '提货预约' }
       }
     ]
   },
@@ -336,17 +469,35 @@ const routes = [
             meta: { title: '评分看板', parentTitle: '评分管理' }
           },
           {
+            path: 'field-rule-config',
+            name: 'FieldRuleConfig',
+            component: () => import('@/views/Admin/RatingManagement/FieldRuleConfig.vue'),
+            meta: { title: '字段规则配置' }
+          },
+          {
+            path: 'metric-rule-config',
+            name: 'MetricRuleConfig',
+            component: () => import('@/views/Admin/RatingManagement/MetricRuleConfig.vue'),
+            meta: { title: '指标规则配置' }
+          },
+          {
             path: 'indicator-config',
-            name: 'AdminRatingIndicatorConfig',
-            component: () => import('../views/Admin/RatingManagement/RatingIndicatorConfig.vue'),
+            name: 'RatingIndicatorConfig',
+            component: () => import('@/views/Admin/RatingManagement/RatingIndicatorConfig.vue'),
             meta: { title: '指标配置', parentTitle: '评分管理' }
           },
           {
             path: 'rules-config',
-            name: 'AdminRatingRulesConfig',
-            component: () => import('../views/Admin/RatingManagement/RatingRulesConfig.vue'),
+            name: 'RatingRulesConfig',
+            component: () => import('@/views/Admin/RatingManagement/RatingRulesConfig.vue'),
             meta: { title: '规则配置', parentTitle: '评分管理' }
           },
+          {
+            path: 'supplier-deduction-details',
+            name: 'SupplierDeductionDetails',
+            component: () => import('@/views/Admin/RatingManagement/SupplierDeductionDetails.vue'),
+            meta: { title: '扣分详情' }
+          }
         ]
       },
       {
@@ -487,7 +638,7 @@ const routes = [
     ],
   },
   {
-    path: '/table-demo',
+    path: '/tableDemo',
     name: 'tableDemo',
     component: TableSurelyDemo
   }

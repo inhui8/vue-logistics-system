@@ -8,17 +8,27 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@fullcalendar/daygrid": "^6.1.17",
+    "@fullcalendar/interaction": "^6.1.17",
+    "@fullcalendar/list": "^6.1.17",
+    "@fullcalendar/timegrid": "^6.1.17",
+    "@fullcalendar/vue3": "^6.1.17",
     "@surely-vue/table": "^5.0.1",
+    "@visactor/vtable": "^1.17.6",
     "axios": "^0.27.2",
     "core-js": "^3.8.3",
-    "dayjs": "^1.11.0",
+    "dayjs": "^1.11.13",
     "echarts": "^5.6.0",
     "element-plus": "^2.2.0",
+    "uuid": "^11.1.0",
     "vue": "^3.2.13",
     "vue-demi": "^0.14.10",
     "vue-router": "^4.0.3",
     "vuedraggable": "^4.1.0",
-    "vuex": "^4.0.0"
+    "vuex": "^4.0.0",
+    "vxe-pc-ui": "^4.5.22",
+    "vxe-table": "^4.5.18",
+    "xe-utils": "^3.5.13"
   },
   "devDependencies": {
     "@babel/core": "^7.26.10",

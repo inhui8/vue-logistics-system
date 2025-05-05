@@ -70,6 +70,25 @@
                 <el-input v-model="formData.remark" placeholder="请输入"></el-input>
               </el-form-item>
             </div>
+            
+            <div class="form-row">
+              <el-form-item label="车厢号" class="form-item">
+                <el-input v-model="formData.trailerNumber" placeholder="请输入 (与批次相同)"></el-input>
+              </el-form-item>
+              
+              <el-form-item label="Dock号" class="form-item">
+                <el-input v-model="formData.dockNumber" placeholder="请输入 (与批次相同)"></el-input>
+              </el-form-item>
+            </div>
+            
+            <div class="form-row">
+              <el-form-item label="是否备货" class="form-item">
+                <el-radio-group v-model="formData.needsPreparation" size="small">
+                  <el-radio :label="true">是</el-radio>
+                  <el-radio :label="false">否</el-radio>
+                </el-radio-group>
+              </el-form-item>
+            </div>
           </el-form>
         </div>
       </div>
@@ -156,6 +175,9 @@ export default {
       transportType: 'ftl',
       deliveryCost: '',
       remark: '',
+      trailerNumber: '',
+      dockNumber: '',
+      needsPreparation: false,
       details: [],
       totalCount: '300 PCS',
       totalCBM: '12.84 CBM',
@@ -166,6 +188,9 @@ export default {
     watch(() => props.visible, (newVal) => {
       if (newVal) {
         formData.details = processSelectedRows();
+        formData.trailerNumber = '';
+        formData.dockNumber = '';
+        formData.needsPreparation = false;
       }
     });
     

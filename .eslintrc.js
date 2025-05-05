@@ -33,6 +33,7 @@ module.exports = {
       'vue/no-type-assertions': 'off',
       'vue/no-non-null-assertion': 'off',
       'vue/no-template-type-annotations': 'off',
-      'vue/no-ts-type-assertions': 'off'
+      'vue/no-ts-type-assertions': 'off',
+      'vue/multi-word-component-names': 'off'
     }
   }

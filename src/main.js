@@ -8,6 +8,14 @@ import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import STable from '@surely-vue/table'
 import '@surely-vue/table/dist/index.css'
 
+// 导入VXETable
+import 'xe-utils'
+import { VXETable, Header, Column, Table, Footer, Checkbox, 
+  Radio, Filter, Menu, Edit, Export, Keyboard, Validator, Grid, 
+  Tooltip, Pager, Icon, Select } from 'vxe-table'
+import 'vxe-table/lib/style.css'
+import zhCN from 'vxe-table/lib/locale/lang/zh-CN'
+
 // 简化 ResizeObserver 错误处理方案
 const handleResizeObserverError = () => {
   // 1. 忽略 ResizeObserver 相关错误
@@ -47,5 +55,29 @@ app.use(ElementPlus, {
   locale: zhCn
 })
 app.use(STable)
+
+// 使用VXETable（Vue 3方式）
+VXETable.setup({
+  language: 'zh-CN'
+})
+VXETable.use(zhCN)
+
+app.use(Header)
+   .use(Column)
+   .use(Table)
+   .use(Footer)
+   .use(Checkbox)
+   .use(Radio)
+   .use(Filter)
+   .use(Menu)
+   .use(Edit)
+   .use(Export)
+   .use(Keyboard)
+   .use(Validator)
+   .use(Grid)
+   .use(Tooltip)
+   .use(Pager)
+   .use(Icon)
+   .use(Select)
 
 app.mount('#app') 

@@ -1,0 +1,2 @@
+"use strict";(self["webpackChunkvue_logistics_system"]=self["webpackChunkvue_logistics_system"]||[]).push([[9583],{9583:(e,s,t)=>{t.r(s),t.d(s,{default:()=>n});var u=t(641);const r={__name:"SubRouteLayout",setup(e){return(e,s)=>{const t=(0,u.g2)("router-view");return(0,u.uX)(),(0,u.Wv)(t)}}},c=r,n=c}}]);
+//# sourceMappingURL=9583.ff41a075.js.map

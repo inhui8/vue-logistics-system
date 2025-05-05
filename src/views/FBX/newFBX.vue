@@ -434,36 +434,26 @@
   
       <!-- 分组设置弹窗 -->
       <el-dialog
-        title="分组设置"
+        title="高级分组"
         v-model="groupModalVisible"
         width="500px"
       >
-        <div class="group-settings">
-          <div class="group-level">
-            <span class="group-level-label">一级分组：</span>
-            <el-select v-model="groupSettings.level1" placeholder="选择字段" style="width: 280px;" clearable>
-              <el-option v-for="field in groupableFields" :key="field.prop" :label="field.label" :value="field.prop"></el-option>
+        <el-form label-width="100px">
+          <el-form-item label="分组字段">
+            <el-select v-model="tempGroupField" placeholder="请选择分组字段" style="width: 100%">
+              <el-option label="不分组" :value="''"></el-option> <!-- 新增不分组选项 -->
+              <el-option
+                v-for="field in groupableFields"
+                :key="field.prop"
+                :label="field.label"
+                :value="field.prop"
+              ></el-option>
             </el-select>
-          </div>
-          <div class="group-level">
-            <span class="group-level-label">二级分组：</span>
-            <el-select v-model="groupSettings.level2" placeholder="选择字段" style="width: 280px;" clearable>
-              <el-option v-for="field in groupableFields" :key="field.prop" :label="field.label" :value="field.prop"></el-option>
-            </el-select>
-          </div>
-          <div class="group-level">
-            <span class="group-level-label">三级分组：</span>
-            <el-select v-model="groupSettings.level3" placeholder="选择字段" style="width: 280px;" clearable>
-              <el-option v-for="field in groupableFields" :key="field.prop" :label="field.label" :value="field.prop"></el-option>
-            </el-select>
-          </div>
-        </div>
+          </el-form-item>
+        </el-form>
         <template #footer>
-          <span class="dialog-footer">
-            <el-button @click="groupModalVisible = false">取消</el-button>
-            <el-button type="danger" @click="clearGroupSettings">清除分组</el-button>
-            <el-button type="primary" @click="applyGroupSettings">应用</el-button>
-          </span>
+          <el-button @click="cancelGrouping">取消</el-button>
+          <el-button type="primary" @click="applyGrouping">确定</el-button>
         </template>
       </el-dialog>
   
@@ -694,6 +684,26 @@
         v-model:visible="podDialogVisible"
         @submit="handlePodSubmit"
       />
+
+      <!-- 创建出库PC 对话框 -->
+      <el-dialog
+        v-model="createPCDialogVisible" 
+        title="创建出库PC" 
+        width="80%" 
+        top="5vh" 
+        destroy-on-close
+      >
+        <CreateOutboundPC v-if="createPCDialogVisible" /> 
+        <!-- 可以在这里给 CreateOutboundPC 传递 props，例如选中的行: :selected-data="selectedRows" -->
+        <!-- 
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button @click="createPCDialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="handleSavePC">保存</el-button> 
+          </span>
+        </template>
+        -->
+      </el-dialog>
     </div>
   </template>
   
@@ -709,11 +719,13 @@
   import containerShipmentsData from '@/assets/json/containerShipmentsData.json';
   import { DArrowLeft } from '@element-plus/icons-vue';
   import draggable from 'vuedraggable';
+  import { useRouter } from 'vue-router'; // Import useRouter
+  import CreateOutboundPC from '@/views/FBX/CreateOutboundPC.vue'; // <-- 引入创建出库PC组件
   
-  // 使用新的容器发货数据源
-  const defaultTableColumns = containerShipmentsColumns;
-  const defaultChildColumns = containerItemsColumns;
-  const defaultData = containerShipmentsData;
+  // 使用新的容器发货数据源 - 移入 setup
+  // const defaultTableColumns = containerShipmentsColumns;
+  // const defaultChildColumns = containerItemsColumns;
+  // const defaultData = containerShipmentsData;
   
   export default {
     name: 'ContainerShipments', // 更改组件名称以反映其功能
@@ -722,9 +734,15 @@
       GroupableTable,
       draggable,
       DArrowLeft,
-      UploadPodDialog
+      UploadPodDialog,
+      CreateOutboundPC // <-- 注册组件
     },
     setup() {
+      // 使用新的容器发货数据源 (移入 setup)
+      const defaultTableColumns = containerShipmentsColumns;
+      const defaultChildColumns = containerItemsColumns;
+      const defaultData = containerShipmentsData;
+      
       // 基础数据
       const tableColumns = ref(defaultTableColumns);
       const childColumns = ref(defaultChildColumns);
@@ -759,7 +777,8 @@
       const saveViewDialogVisible = ref(false);
       const viewOptionsDialogVisible = ref(false);
       const renameViewDialogVisible = ref(false);
-      const groupField = ref('');
+      const tempGroupField = ref(''); // 新增，用于临时存储分组设置
+      const groupField = ref(''); // 保存当前生效的分组字段
       const viewForm = ref({
         name: '',
         columns: []
@@ -782,8 +801,8 @@
       
       // 获取分组标签类型
       const getGroupTagType = (level) => {
-        const types = ['', 'primary', 'success', 'warning'];
-        return types[level] || '';
+        const types = ['success', 'warning', 'info'];
+        return types[level] || 'info';
       };
       
       // 预设视图的列配置
@@ -825,8 +844,8 @@
           activeFilters.value = [];
           filterLogic.value = 'and';
           // 重置分组配置
-          groupSettings.value = { level1: '', level2: '', level3: '' };
-          groupField.value = '';
+          groupField.value = ''; // 重置分组字段
+          tempGroupField.value = ''; // 重置临时分组字段
           // 重置排序配置
           sortSettings.value = [{ field: '', direction: 'asc' }];
         } 
@@ -1084,7 +1103,10 @@
         const groups = {};
         
         data.forEach(item => {
-          const value = item[field] || '未分类';
+          // 更精确地判断分组值，只有undefined和null才使用"未分类"
+          const fieldValue = item[field];
+          const value = fieldValue === undefined || fieldValue === null ? '未分类' : String(fieldValue);
+          
           if (!groups[value]) {
             groups[value] = [];
           }
@@ -1249,8 +1271,9 @@
             handleDetail(row);
             break;
           case 'expense':
-            // 查看费用明细
-            ElMessage.info('查看费用明细');
+            // 查看费用明细 - 跳转到新页面
+            // ElMessage.info('查看费用明细');
+            router.push({ name: 'FBXExpenseDetails', params: { id: row.id } }); // 使用 router 跳转
             break;
           case 'uploadPod':
             handleUploadPod(row);
@@ -1596,6 +1619,7 @@
   
       // 显示分组设置弹窗
       const showGroupModal = () => {
+        tempGroupField.value = groupField.value; // 打开时，将当前生效的分组字段赋给临时变量
         groupModalVisible.value = true;
       };
   
@@ -1622,7 +1646,7 @@
       };
       
       // 应用多级分组
-      const applyMultiLevelGroup = (groupFields) => {
+      const applyMultiLevelGroup = (groupFields, sortSettings = []) => {
         if (!groupFields || groupFields.length === 0) {
           applyFiltersAndPagination();
           return;
@@ -1655,8 +1679,7 @@
         if (searchText.value) {
           filteredData = filteredData.filter(item => {
             const value = item[searchType.value];
-            if (!value) return false;
-            return value.toString().toLowerCase().includes(searchText.value.toLowerCase());
+            return value && value.toString().toLowerCase().includes(searchText.value.toLowerCase());
           });
         }
         
@@ -1723,100 +1746,208 @@
           });
         }
         
-        // 进行分组处理
-        const groupedData = [];
-        const groupMap = new Map();
-        
-        // 处理分组数据
-        filteredData.forEach(item => {
-          let currentLevel = groupedData;
-          let currentPath = '';
-          let parentItem = null;
+        // 对每个组内的数据进行排序的函数
+        const sortItems = (items) => {
+          if (!sortSettings || sortSettings.length === 0 || items.length <= 1) return items;
           
-          // 处理每个分组级别
-          for (let i = 0; i < groupFields.length; i++) {
-            const field = groupFields[i];
-            const value = item[field] || '未分类';
-            const fieldLabel = getFieldLabel(field);
-            const groupKey = `${currentPath}/${field}:${value}`;
-            
-            // 查找或创建当前级别的分组
-            let group = currentLevel.find(g => g.groupKey === groupKey);
-            
-            if (!group) {
-              group = {
-                id: `group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                groupKey,
-                groupName: `${fieldLabel}: ${value}`,
-                isGroup: true,
-                groupLevel: i,
-                children: [],
-                items: [],
-                count: 0
-              };
+          return [...items].sort((a, b) => {
+            for (const { field, direction } of sortSettings) {
+              if (!field) continue;
               
-              // 设置分组样式
-              if (i === 0) {
-                group.groupClass = 'level-1-group';
-              } else if (i === 1) {
-                group.groupClass = 'level-2-group';
-              } else {
-                group.groupClass = 'level-3-group';
+              let aValue = a[field];
+              let bValue = b[field];
+              
+              // 跳过未定义值的比较
+              if (aValue === undefined || bValue === undefined) continue;
+              
+              // 处理数字类型
+              if (!isNaN(aValue) && !isNaN(bValue)) {
+                aValue = Number(aValue);
+                bValue = Number(bValue);
               }
               
-              currentLevel.push(group);
-              groupMap.set(groupKey, group);
+              // 相等则继续比较下一个字段
+              if (aValue === bValue) continue;
+              
+              // 处理字符串类型
+              if (typeof aValue === 'string' && typeof bValue === 'string') {
+                if (direction === 'asc') {
+                  return aValue.localeCompare(bValue);
+                } else {
+                  return bValue.localeCompare(aValue);
+                }
+              }
+              
+              // 处理数字或其他类型
+              if (direction === 'asc') {
+                return aValue > bValue ? 1 : -1;
+              } else {
+                return aValue < bValue ? 1 : -1;
+              }
+            }
+            return 0;
+          });
+        };
+        
+        // 专门为 groupable-table 组件创建分组数据
+        const buildGroupedData = () => {
+          // 使用Map来存储每个分组级别的数据
+          const result = [];
+          
+          // 第一步：按照分组字段对数据进行分组
+          const groupsData = {};
+          
+          // 对第一级分组
+          filteredData.forEach(item => {
+            const field1 = groupFields[0];
+            const value1 = item[field1] || '未分类';
+            const key1 = `${field1}:${value1}`;
+            
+            if (!groupsData[key1]) {
+              groupsData[key1] = {
+                items: [],
+                subgroups: {}
+              };
             }
             
-            // 更新统计信息
-            group.items.push(item);
-            group.count = group.items.length;
-            
-            // 为下一级分组做准备
-            currentPath = groupKey;
-            currentLevel = group.children;
-            parentItem = group;
-          }
-          
-          // 将原始数据项添加到最后一级分组的子项中
-          if (parentItem) {
-            // 添加原始数据项到分组的子项中，但保留其原始属性
-            const clonedItem = {...item, parentGroupKey: parentItem.groupKey};
-            parentItem.children.push(clonedItem);
-          }
-        });
-        
-        // 将所有分组和数据项合并到一个扁平数组中
-        const flattenedData = [];
-        
-        // 递归函数，用于展开所有分组和数据项
-        function flattenGroups(groups, level = 0) {
-          groups.forEach(group => {
-            // 添加分组项
-            flattenedData.push(group);
-            
-            // 如果有子分组，递归处理
-            const childGroups = group.children.filter(child => child.isGroup);
-            if (childGroups.length > 0) {
-              flattenGroups(childGroups, level + 1);
+            if (groupFields.length === 1) {
+              groupsData[key1].items.push(item);
             } else {
-              // 如果没有子分组，添加该分组下的所有数据项
-              group.children.forEach(item => {
-                flattenedData.push(item);
+              // 处理第二级分组
+              const field2 = groupFields[1];
+              const value2 = item[field2] || '未分类';
+              const key2 = `${field2}:${value2}`;
+              
+              if (!groupsData[key1].subgroups[key2]) {
+                groupsData[key1].subgroups[key2] = {
+                  items: [],
+                  subgroups: {}
+                };
+              }
+              
+              if (groupFields.length === 2) {
+                groupsData[key1].subgroups[key2].items.push(item);
+              } else {
+                // 处理第三级分组
+                const field3 = groupFields[2];
+                const value3 = item[field3] || '未分类';
+                const key3 = `${field3}:${value3}`;
+                
+                if (!groupsData[key1].subgroups[key2].subgroups[key3]) {
+                  groupsData[key1].subgroups[key2].subgroups[key3] = {
+                    items: []
+                  };
+                }
+                
+                groupsData[key1].subgroups[key2].subgroups[key3].items.push(item);
+              }
+            }
+          });
+          
+          // 第二步：将分组数据转换为扁平结构，并添加分组标识
+          // 添加一级分组及其数据
+          Object.entries(groupsData).forEach(([key1, group1]) => {
+            const [field1, value1] = key1.split(':');
+            const fieldLabel1 = getFieldLabel(field1);
+            
+            // 添加一级分组标签
+            const groupRow1 = {
+              id: `group-${field1}-${value1}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              groupName: `${fieldLabel1}: ${value1}`,
+              isGroup: true,
+              groupLevel: 0,
+              count: groupFields.length === 1 ? group1.items.length : 
+                     Object.values(group1.subgroups).reduce((sum, g) => sum + g.items.length, 0)
+            };
+            
+            result.push(groupRow1);
+            
+            if (groupFields.length === 1) {
+              // 添加一级分组下的数据项（已排序）
+              const sortedItems = sortItems(group1.items);
+              sortedItems.forEach(item => {
+                result.push({
+                  ...item,
+                  parentGroupId: groupRow1.id
+                });
+              });
+            } else {
+              // 添加二级分组及其数据
+              Object.entries(group1.subgroups).forEach(([key2, group2]) => {
+                const [field2, value2] = key2.split(':');
+                const fieldLabel2 = getFieldLabel(field2);
+                
+                // 添加二级分组标签
+                const groupRow2 = {
+                  id: `group-${field2}-${value2}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                  groupName: `${fieldLabel2}: ${value2}`,
+                  isGroup: true,
+                  groupLevel: 1,
+                  count: groupFields.length === 2 ? group2.items.length : 
+                         Object.values(group2.subgroups).reduce((sum, g) => sum + g.items.length, 0),
+                  parentGroupId: groupRow1.id
+                };
+                
+                result.push(groupRow2);
+                
+                if (groupFields.length === 2) {
+                  // 添加二级分组下的数据项（已排序）
+                  const sortedItems = sortItems(group2.items);
+                  sortedItems.forEach(item => {
+                    result.push({
+                      ...item,
+                      parentGroupId: groupRow2.id
+                    });
+                  });
+                } else {
+                  // 添加三级分组及其数据
+                  Object.entries(group2.subgroups).forEach(([key3, group3]) => {
+                    const [field3, value3] = key3.split(':');
+                    const fieldLabel3 = getFieldLabel(field3);
+                    
+                    // 添加三级分组标签
+                    const groupRow3 = {
+                      id: `group-${field3}-${value3}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                      groupName: `${fieldLabel3}: ${value3}`,
+                      isGroup: true,
+                      groupLevel: 2,
+                      count: group3.items.length,
+                      parentGroupId: groupRow2.id
+                    };
+                    
+                    result.push(groupRow3);
+                    
+                    // 添加三级分组下的数据项（已排序）
+                    const sortedItems = sortItems(group3.items);
+                    sortedItems.forEach(item => {
+                      result.push({
+                        ...item,
+                        parentGroupId: groupRow3.id
+                      });
+                    });
+                  });
+                }
               });
             }
           });
+          
+          return result;
+        };
+        
+        // 创建分组数据并设置到displayData
+        displayData.value = buildGroupedData();
+        totalItems.value = displayData.value.length;
+        
+        // 设置分组标志，让组件知道有分组数据
+        hasGroupedData.value = true;
+      };
+      
+      // eslint-disable-next-line no-unused-vars
+      const getRowClassName = ({ row }) => {
+        if (row.isGroup) {
+          return `group-row ${row.groupClass || ''}`;
         }
-        
-        flattenGroups(groupedData);
-        
-        // 计算总数
-        totalItems.value = flattenedData.length;
-        
-        // 分页处理
-        const start = (currentPage.value - 1) * pageSize.value;
-        const end = start + pageSize.value;
-        displayData.value = flattenedData.slice(start, end);
+        return '';
       };
   
       // 排序相关
@@ -1854,41 +1985,106 @@
           return;
         }
         
-        // 克隆当前显示数据进行排序
-        let sortedData = [...displayData.value];
-        
-        // 按照设置的顺序依次排序
-        sortSettings.value.forEach(({ field, direction }) => {
+        // 如果有分组，重新应用分组和排序
+        if (groupSettings.value.level1 || groupSettings.value.level2 || groupSettings.value.level3) {
+          const groupFields = [];
+          if (groupSettings.value.level1) groupFields.push(groupSettings.value.level1);
+          if (groupSettings.value.level2) groupFields.push(groupSettings.value.level2);
+          if (groupSettings.value.level3) groupFields.push(groupSettings.value.level3);
+          
+          applyMultiLevelGroup(groupFields, sortSettings.value);
+        } else {
+          // 如果没有分组，直接对数据进行排序
+          let sortedData = [...tableData.value];
+          
+          // 应用筛选
+          if (activeFilters.value.length > 0) {
+            sortedData = sortedData.filter(item => {
+              const filterResults = activeFilters.value.map(filter => {
+                const { field, operator, value } = filter;
+                const itemValue = item[field];
+                
+                if (itemValue == null) {
+                  return false;
+                }
+                
+                switch (operator) {
+                  case 'eq':
+                    return itemValue == value;
+                  case 'neq':
+                    return itemValue != value;
+                  case 'contains':
+                    return itemValue.toString().toLowerCase().includes(value.toString().toLowerCase());
+                  case 'notContains':
+                    return !itemValue.toString().toLowerCase().includes(value.toString().toLowerCase());
+                  case 'startsWith':
+                    return itemValue.toString().toLowerCase().startsWith(value.toString().toLowerCase());
+                  case 'endsWith':
+                    return itemValue.toString().toLowerCase().endsWith(value.toString().toLowerCase());
+                  case 'gt':
+                    return Number(itemValue) > Number(value);
+                  case 'gte':
+                    return Number(itemValue) >= Number(value);
+                  case 'lt':
+                    return Number(itemValue) < Number(value);
+                  case 'lte':
+                    return Number(itemValue) <= Number(value);
+                  default:
+                    return true;
+                }
+              });
+              
+              return filterLogic.value === 'and'
+                ? filterResults.every(r => r)
+                : filterResults.some(r => r);
+            });
+          }
+          
+          // 应用排序
           sortedData.sort((a, b) => {
-            let aValue = a[field];
-            let bValue = b[field];
-            
-            // 处理数字类型
-            if (!isNaN(aValue) && !isNaN(bValue)) {
-              aValue = Number(aValue);
-              bValue = Number(bValue);
-            }
-            
-            // 处理字符串类型
-            if (typeof aValue === 'string' && typeof bValue === 'string') {
+            for (const { field, direction } of sortSettings.value) {
+              if (!field) continue;
+              
+              let aValue = a[field];
+              let bValue = b[field];
+              
+              // 跳过未定义值的比较
+              if (aValue === undefined || bValue === undefined) continue;
+              
+              // 处理数字类型
+              if (!isNaN(aValue) && !isNaN(bValue)) {
+                aValue = Number(aValue);
+                bValue = Number(bValue);
+              }
+              
+              // 相等则继续比较下一个字段
+              if (aValue === bValue) continue;
+              
+              // 处理字符串类型
+              if (typeof aValue === 'string' && typeof bValue === 'string') {
+                if (direction === 'asc') {
+                  return aValue.localeCompare(bValue);
+                } else {
+                  return bValue.localeCompare(aValue);
+                }
+              }
+              
+              // 处理数字或其他类型
               if (direction === 'asc') {
-                return aValue.localeCompare(bValue);
+                return aValue > bValue ? 1 : -1;
               } else {
-                return bValue.localeCompare(aValue);
+                return aValue < bValue ? 1 : -1;
               }
             }
-            
-            // 处理数字或其他类型
-            if (direction === 'asc') {
-              return aValue > bValue ? 1 : -1;
-            } else {
-              return aValue < bValue ? 1 : -1;
-            }
+            return 0;
           });
-        });
+          
+          // 设置分页数据
+          displayData.value = sortedData;
+          totalItems.value = sortedData.length;
+          hasGroupedData.value = false;
+        }
         
-        // 更新显示数据
-        displayData.value = sortedData;
         sortModalVisible.value = false;
         
         // 如果当前是自定义视图，更新配置
@@ -2056,6 +2252,7 @@
       // 批量操作相关
       const batchOperation = ref('');
       const batchDialogVisible = ref(false);
+      const createPCDialogVisible = ref(false); // <-- 新增 ref 控制创建PC弹窗
       const batchForm = ref({
         followUp: '',
         memo: '',
@@ -2089,6 +2286,7 @@
             }
             // 处理批量添加跟进记录
             ElMessage.success(`已为${selectedRows.value.length}条记录添加跟进记录`);
+            batchDialogVisible.value = false; // 关闭原批量操作弹窗
             break;
           case 'memo':
             if (!batchForm.value.memo) {
@@ -2097,19 +2295,24 @@
             }
             // 处理批量添加MEMO
             ElMessage.success(`已为${selectedRows.value.length}条记录添加MEMO`);
+            batchDialogVisible.value = false; // 关闭原批量操作弹窗
             break;
           case 'createPC':
             if (batchForm.value.pcType === 'transfer' && !batchForm.value.targetWarehouse) {
               ElMessage.warning('请选择目标仓库');
               return;
             }
-            // 处理创建PC
-            const pcType = batchForm.value.pcType === 'delivery' ? '出库PC' : '调拨PC';
-            ElMessage.success(`已创建${pcType}，包含${selectedRows.value.length}条记录`);
+            batchDialogVisible.value = false; // 先关闭原批量操作弹窗
+            if (batchForm.value.pcType === 'delivery') {
+              // 打开创建出库PC的弹窗
+              createPCDialogVisible.value = true; // <-- 打开新弹窗
+            } else {
+              // 处理创建调拨PC的逻辑（如果需要）
+              ElMessage.success(`已创建调拨PC，包含${selectedRows.value.length}条记录`);
+            }
             break;
         }
-        
-        batchDialogVisible.value = false;
+        // batchDialogVisible.value = false; // 移动到各个 case 内部处理
       };
       
       const handleSaveEdit = (value) => {
@@ -2356,6 +2559,22 @@
         }
       };
 
+      // 获取 router 实例
+      const router = useRouter();
+
+      // 筛选后的主表格列
+      const visibleMainTableColumns = computed(() => {
+        return tableColumns.value.filter(col => [
+          'trainNumber', 'loadingType', 'loadingStatus', 'loadingStartTime', 
+          'loadingEndTime', 'loader', 'dockNumber', 'actualPallets',
+          'deliveryType', 'supplier', 'driverPhone', 'licensePlate',
+          'destination', 'deliveryCost', 'driverLicense', 'driverPhone',
+          'loadingStatus', 'loadingAppointmentTime', 'appointmentStatus',
+          'tags', 'followUpRecord', 'remarks', 'internalRemarks',
+          'quotationLianyu', 'shippingMark', 'platformQuotation'
+        ].includes(col.prop));
+      });
+
       return {
         // 基础数据
         tableColumns,
@@ -2391,6 +2610,7 @@
         saveViewDialogVisible,
         viewOptionsDialogVisible,
         renameViewDialogVisible,
+        tempGroupField,
         groupField,
         viewForm,
         currentEditingView,
@@ -2501,9 +2721,13 @@
         loadHistoryRecords,
         podDialogVisible,
         handleUploadPod,
-        handlePodSubmit
+        handlePodSubmit,
+        createPCDialogVisible, // <-- 暴露给模板
+
+        // 新增
+        visibleMainTableColumns // 暴露给模板
       };
-    }
+    } // Ensure this is the correct closing brace for setup()
   };
   </script>
   
@@ -3124,5 +3348,10 @@
     box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
     padding: 5px;
     border-radius: 4px;
+  }
+
+  /* 可以为新弹窗添加一些样式调整 */
+  :deep(.el-dialog__body) {
+    padding: 10px 20px; /* 调整弹窗body内边距 */
   }
   </style> 

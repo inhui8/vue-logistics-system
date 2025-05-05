@@ -235,11 +235,16 @@
                     <el-dropdown-item command="followUp">跟进记录</el-dropdown-item>
                     <el-dropdown-item command="history">历史记录</el-dropdown-item>
                     <el-dropdown-item command="expense">费用明细</el-dropdown-item>
+                    <el-dropdown-item command="extractQuoteFee">提取供询价费用</el-dropdown-item>
                     <el-dropdown-item command="markException">标记异常</el-dropdown-item>
                     <el-dropdown-item command="pcDetail">GPS轨迹</el-dropdown-item>
                     <el-dropdown-item command="PCdetail">PC明细</el-dropdown-item>
                     <el-dropdown-item command="cancel">取消车次</el-dropdown-item>
                     <el-dropdown-item command="uploadFile">文件上传</el-dropdown-item>
+                    <el-dropdown-item command="pickup">提货预约</el-dropdown-item>
+                    <el-dropdown-item command="stockPreparation">备货指令</el-dropdown-item>
+                    <el-dropdown-item command="stockComplete">备货完成</el-dropdown-item>
+                    <el-dropdown-item command="loadingComplete">装车完成</el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
@@ -627,7 +632,10 @@
             >
               <div class="follow-up-item">
                 <div class="follow-up-content">{{ record.content }}</div>
-                <div class="follow-up-operator">操作人：{{ record.operator }}</div>
+                <div class="follow-up-info">
+                  <span class="follow-up-operator">操作人：{{ record.operator }}</span>
+                  <span class="follow-up-target" v-if="record.target">跟进对象：{{ record.target }}</span>
+                </div>
                 <div v-if="record.files && record.files.length" class="follow-up-files">
                   <el-tag
                     v-for="file in record.files"
@@ -655,6 +663,13 @@
               :rows="4"
               placeholder="请输入跟进内容"
             ></el-input>
+          </el-form-item>
+          <el-form-item label="跟进对象">
+            <el-select v-model="followUpForm.target" placeholder="请选择跟进对象" style="width: 100%">
+              <el-option label="内部" value="内部"></el-option>
+              <el-option label="供应商" value="供应商"></el-option>
+              <el-option label="客服" value="客服"></el-option>
+            </el-select>
           </el-form-item>
           <el-form-item label="跟进类型">
             <el-select v-model="followUpForm.type" placeholder="请选择跟进类型" style="width: 100%">
@@ -742,12 +757,25 @@
       </el-tab-pane>
       <!-- ... existing code ... -->
     </el-tabs>
+
+    <!-- 添加 AppointmentModal 组件到模板 -->
+    <AppointmentModal
+      :visible="pickupModalVisible"
+      :current-appointment="pickupAppointmentData"
+      :edit-mode="pickupEditMode" 
+      @save="handlePickupModalSave" 
+      @close="closePickupModal"
+      :min-date="null" 
+      :available-time-slots="[]" 
+      :appointments="[]" 
+      :appointment-settings="{}"
+    />
   </div>
 </template>
 
 <script>
 import { ref, computed, onMounted, watch } from 'vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessage, ElMessageBox, ElDialog, ElForm, ElFormItem, ElInput, ElButton } from 'element-plus'; // 确保导入 Dialog 相关组件
 import FilterPanel from '@/components/logistics/FilterPanel.vue';
 import GroupableTable from '@/components/logistics/GroupableTable.vue';
 import ExpenseDetailDialog from '@/components/logistics/ExpenseDetailDialog.vue';
@@ -756,6 +784,7 @@ import GpsTrackDialog from '@/components/logistics/GpsTrackDialog.vue';
 import TrainFileUploadDialog from '@/components/logistics/TrainFileUploadDialog.vue';
 import UploadPodDialog from '@/components/logistics/UploadPodDialog.vue';
 import FileUploadWithTagDialog from '@/components/logistics/FileUploadWithTagDialog.vue';
+import AppointmentModal from '@/components/AppointmentModal.vue'; // 导入 AppointmentModal
 import deliveryTrainsColumns from '@/assets/json/deliveryTrainsColumns.json';
 import childTableColumns from '@/assets/json/childTableColumns.json';
 import deliveryTrainsData from '@/assets/json/deliveryTrainsData.json';
@@ -783,8 +812,14 @@ export default {
     TrainFileUploadDialog,
     UploadPodDialog,
     FileUploadWithTagDialog,
+    ElDialog, // 注册组件
+    ElForm,
+    ElFormItem,
+    ElInput,
+    ElButton,
     draggable,
-    DArrowLeft
+    DArrowLeft,
+    AppointmentModal // 注册 AppointmentModal
   },
   setup() {
     // 添加错误处理
@@ -1105,6 +1140,8 @@ export default {
       const statusMap = {
         '未装车': 'info',
         '已登记': 'warning',
+        '待备货': 'warning', // 添加待备货状态
+        '备货完成': 'primary', // 添加备货完成状态样式
         '装车中': 'warning',
         '装车完成': 'success',
         '已发货': 'success',
@@ -1202,6 +1239,9 @@ export default {
     // 处理下拉菜单命令
     const handleCommand = (command, row) => {
       switch (command) {
+        case 'pickup':
+          handlePickupAppointment(row); // Directly call the function
+          break;
         case 'memo':
           handleMemo(row);
           break;
@@ -1211,6 +1251,9 @@ export default {
         case 'expense':
           currentTrainData.value = row;
           expenseDialogVisible.value = true;
+          break;
+        case 'extractQuoteFee': 
+          handleExtractQuoteFee(row);
           break;
         case 'markException':
           handleMarkException(row);
@@ -1224,6 +1267,15 @@ export default {
           break;
         case 'uploadFile':
           handleFileUpload(row);
+          break;
+        case 'stockPreparation': // 处理备货指令命令
+          handleStockPreparation(row);
+          break;
+        case 'stockComplete': // 处理备货完成命令
+          handleStockComplete(row);
+          break;
+        case 'loadingComplete': // 处理装车完成命令
+          handleLoadingComplete(row);
           break;
         // ... 其他命令处理 ...
       }
@@ -2032,6 +2084,8 @@ export default {
           return 'danger';
         case '紧急':
           return 'warning';
+        case '备货': // 添加备货标签类型
+          return 'success';
         default:
           return '';
       }
@@ -2070,6 +2124,7 @@ export default {
     const followUpForm = ref({
       content: '',
       type: 'primary',
+      target: '', // 添加跟进对象字段
       files: []
     });
     const followUpHistory = ref([
@@ -2077,13 +2132,15 @@ export default {
         time: '2024-03-20 10:00:00',
         content: '已联系司机，预计下午到达',
         operator: '张三',
-        type: 'primary'
+        type: 'primary',
+        target: '内部' // 添加示例跟进对象
       },
       {
         time: '2024-03-20 15:30:00',
         content: '司机到达装货点，开始装货',
         operator: '李四',
-        type: 'warning'
+        type: 'warning',
+        target: '供应商' // 添加示例跟进对象
       }
     ]);
     const currentEditingTrain = ref(null);
@@ -2110,7 +2167,8 @@ export default {
       currentEditingTrain.value = row;
       followUpForm.value = {
         content: '',
-        type: 'primary'
+        type: 'primary',
+        target: '' // 重置跟进对象
       };
       followUpDialogVisible.value = true;
     };
@@ -2156,11 +2214,17 @@ export default {
         return;
       }
 
+      if (!followUpForm.value.target) {
+        ElMessage.warning('请选择跟进对象');
+        return;
+      }
+
       // 添加新的跟进记录
       followUpHistory.value.unshift({
         time: new Date().toLocaleString(),
         content: followUpForm.value.content,
         type: followUpForm.value.type,
+        target: followUpForm.value.target, // 添加跟进对象
         operator: '当前用户', // 这里应该从用户信息中获取
         files: followUpForm.value.files
       });
@@ -2169,6 +2233,7 @@ export default {
       followUpForm.value = {
         content: '',
         type: 'primary',
+        target: '', // 重置跟进对象
         files: []
       };
 
@@ -2342,6 +2407,187 @@ export default {
       // 这里可以添加其他逻辑，比如更新其他相关字段
     };
 
+    // 提取供询价费用弹窗状态
+    const extractFeeDialogVisible = ref(false);
+    const extractFeeData = ref({
+      supplier: '',
+      cost: '',
+      status: ''
+    });
+
+    // 处理提取供询价费用
+    const handleExtractQuoteFee = (row) => {
+      console.log('提取供询价费用:', row);
+      // 从 row 中提取数据，假设供应商名称是 supplier，费用是 deliveryCost
+      extractFeeData.value = {
+        supplier: row.supplier || 'N/A', // 使用 row 中的 supplier 字段
+        cost: row.deliveryCost || 'N/A', // 使用 row 中的 deliveryCost 字段
+        status: '已授标' // 固定状态
+      };
+      extractFeeDialogVisible.value = true; // 打开弹窗
+      // ElMessage.info(`正在处理车次 ${row.trainNumber} 的询价费用提取...`); // 这行可以注释掉或保留
+    };
+
+    // --- 新增：提货预约弹窗状态 ---
+    const pickupModalVisible = ref(false);
+    const pickupAppointmentData = ref(null);
+    const currentPickupTrainRow = ref(null); // 用于保存触发弹窗的行数据
+    const pickupEditMode = ref(false); // 新增：控制弹窗是编辑还是新建
+    // --- 结束：新增状态 ---
+
+    // --- 新增：提货预约相关方法 (移入 setup) ---
+    const getInitialPickupData = () => {
+      return {
+        id: null, trainNumber: '', supplierName: '', 
+        appointmentDate: '', appointmentTime: '', 
+        driverPhone: '', cargoType: '', loadType: '', 
+        createdAt: null, updatedAt: null, 
+        isCheckedIn: false, isLoaded: false,
+      };
+    };
+
+    const handlePickupAppointment = (row) => {
+      console.log("Handling pickup appointment for row:", row);
+      currentPickupTrainRow.value = row; 
+      let cargoType = '';
+      if (row.loadingType === '地板') {
+        cargoType = '地板';
+      } else if (row.loadingType === '卡板') {
+        cargoType = '卡板';
+      } else if (row.loadingType === '混装') {
+        cargoType = '地板'; // 混装按地板处理
+      } else {
+          cargoType = row.loadingType // 保留原始值以防万一
+      }
+
+      // --- 修改判断条件：使用 loadingAppointmentTime --- 
+      if (row.loadingAppointmentTime) { 
+        // 编辑模式 (预填信息，但仍是为 pickupAppointmentTime 创建/修改)
+        pickupEditMode.value = true;
+        // --- 解析 loadingAppointmentTime 来预填 --- 
+        const [datePart, timePart] = row.loadingAppointmentTime.split(' ');
+        pickupAppointmentData.value = {
+          ...getInitialPickupData(),
+           // id 仍为 null 或根据需要传递，因为我们是为 pickup 创建/修改
+           id: null, // Or perhaps row.id if AppointmentModal uses it for updates?
+                      // Let's assume null for now as we create/update pickupAppointmentTime
+           trainNumber: row.trainNumber, 
+           supplierName: row.supplier,   
+           driverPhone: row.driverPhone, 
+           cargoType: cargoType,          
+           appointmentDate: datePart || '', // 从 loadingAppointmentTime 解析
+           appointmentTime: timePart || '', // 从 loadingAppointmentTime 解析
+           loadType: row.loadType || '' 
+        };
+         console.log("Prepared pickup data (Edit Mode - Prefilled from Loading Time):", pickupAppointmentData.value);
+      } else {
+        // 新建模式
+        pickupEditMode.value = false;
+        pickupAppointmentData.value = {
+          ...getInitialPickupData(),
+          trainNumber: row.trainNumber, 
+          supplierName: row.supplier,   
+          driverPhone: row.driverPhone, 
+          cargoType: cargoType
+        };
+         console.log("Prepared pickup data (New Mode):", pickupAppointmentData.value);
+      }
+      
+      pickupModalVisible.value = true;
+    };
+
+    const closePickupModal = () => {
+      pickupModalVisible.value = false;
+      pickupAppointmentData.value = null;
+      currentPickupTrainRow.value = null; 
+      pickupEditMode.value = false; // 重置模式
+    };
+
+    const handlePickupModalSave = (savedData) => {
+      console.log("Pickup modal saved:", savedData);
+      if (currentPickupTrainRow.value) {
+        // 查找原始数据中的对应行并更新
+        const index = tableData.value.findIndex(item => item.id === currentPickupTrainRow.value.id); // Use tableData.value
+        if (index !== -1) {
+          const pickupTime = `${savedData.appointmentDate} ${savedData.appointmentTime}`;
+          tableData.value[index].pickupAppointmentTime = pickupTime; // Update tableData.value
+          console.log(`Updated pickupAppointmentTime for row ${currentPickupTrainRow.value.id} to ${pickupTime}`);
+          // 可能需要重新应用筛选和分页以更新视图
+          applyFiltersAndPagination(); 
+        } else {
+          console.error("Could not find original row to update pickup time");
+        }
+        closePickupModal();
+        ElMessage.success('提货预约已保存');
+      } else {
+          console.error("currentPickupTrainRow is null during save");
+          ElMessage.error('保存预约失败，请重试');
+      }
+    };
+    // --- 结束：新增方法 ---
+
+    // --- 新增：备货指令处理方法 ---
+    const handleStockPreparation = (row) => {
+      if (row.loadingStatus !== '待登记') { // 修改条件：检查是否为"待登记"
+        ElMessage.warning('装车状态不为待登记，无法执行备货指令');
+        return;
+      }
+
+      // 更新状态
+      row.loadingStatus = '待备货'; 
+
+      // 添加标签
+      if (!row.tags) {
+        row.tags = ['备货'];
+      } else if (Array.isArray(row.tags)) {
+        if (!row.tags.includes('备货')) {
+          row.tags.push('备货');
+        }
+      } else if (typeof row.tags === 'string') {
+        const tags = row.tags.split(',').map(t => t.trim());
+        if (!tags.includes('备货')) {
+          tags.push('备货');
+          row.tags = tags.join(',');
+        }
+      }
+
+      // 在这里添加调用APP接口，生成备货车次的逻辑
+      // ...
+
+      // 更新视图
+      applyFiltersAndPagination(); 
+      ElMessage.success('备货指令已执行');
+    };
+    // --- 结束：新增备货指令方法 ---
+
+    // --- 新增：备货完成处理方法 ---
+    const handleStockComplete = (row) => {
+      if (row.loadingStatus !== '待备货') {
+        ElMessage.warning('状态不为待备货，无法执行备货完成');
+        return;
+      }
+      // 更新状态
+      row.loadingStatus = '备货完成';
+      // 可以在此添加其他逻辑，例如更新标签
+      applyFiltersAndPagination();
+      ElMessage.success('已标记为备货完成');
+    };
+    // --- 结束：新增备货完成方法 ---
+
+    // --- 新增：装车完成处理方法 ---
+    const handleLoadingComplete = (row) => {
+      if (row.loadingStatus !== '装车中') {
+        ElMessage.warning('状态不为装车中，无法执行装车完成');
+        return;
+      }
+      // 更新状态
+      row.loadingStatus = '装车完成';
+      // 可以在此添加其他逻辑
+      applyFiltersAndPagination();
+      ElMessage.success('已标记为装车完成');
+    };
+    // --- 结束：新增装车完成方法 ---
+
     return {
       // 基础数据
       tableColumns,
@@ -2501,11 +2747,57 @@ export default {
       saveFollowUp,
       expenseTypes,
       getExpenseTypeOptions,
-      handleExpenseTypeChange
+      handleExpenseTypeChange,
+      extractFeeDialogVisible,
+      extractFeeData,
+      handleExtractQuoteFee,
+      
+      // --- 新增：导出提货预约相关状态和方法 ---
+      pickupModalVisible,
+      pickupAppointmentData,
+      currentPickupTrainRow,
+      pickupEditMode, // 导出 editMode 状态
+      handlePickupAppointment, // Export function
+      handlePickupModalSave,   // Export function
+      closePickupModal,        // Export function
+      handleStockPreparation, // 导出备货指令方法
+      handleStockComplete,    // 导出备货完成方法
+      handleLoadingComplete,  // 导出装车完成方法
+      // handleCommand            // Remove duplicate export if original exists
+      // --- 结束：新增导出 ---
     };
-  }
+  },
+  // --- 移除 methods 块中的提货预约方法 ---
+  /* methods: { ... removed methods ... } */ 
+  // --- 结束：移除方法 ---
 };
 </script>
+
+<!-- 提取供询价费用弹窗 -->
+<el-dialog
+  title="提取供询价费用"
+  v-model="extractFeeDialogVisible"
+  width="500px"
+>
+  <el-form label-width="100px">
+    <el-form-item label="供应商名称">
+      <el-input :value="extractFeeData.supplier" readonly></el-input>
+    </el-form-item>
+    <el-form-item label="费用">
+      <el-input :value="extractFeeData.cost" readonly></el-input>
+    </el-form-item>
+    <el-form-item label="询价状态">
+      <el-input :value="extractFeeData.status" readonly></el-input>
+    </el-form-item>
+  </el-form>
+  <template #footer>
+    <span class="dialog-footer">
+      <el-button @click="extractFeeDialogVisible = false">关闭</el-button>
+      <!-- 可以添加其他操作按钮，例如确认 -->
+      <!-- <el-button type="primary" @click="confirmExtractFee">确认</el-button> -->
+    </span>
+  </template>
+</el-dialog>
 
 <style scoped>
 .delivery-trains-container {
@@ -2925,9 +3217,25 @@ export default {
   margin-bottom: 8px;
 }
 
-.follow-up-operator {
+.follow-up-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 8px;
+}
+
+.follow-up-operator, .follow-up-target {
   color: #909399;
   font-size: 13px;
+}
+
+.follow-up-files {
+  margin-top: 8px;
+}
+
+.file-tag {
+  margin-right: 5px;
+  cursor: pointer;
 }
 
 :deep(.el-timeline-item__node--primary) {

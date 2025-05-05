@@ -244,6 +244,7 @@
                     <el-dropdown-item command="gpsTrack">GPS轨迹</el-dropdown-item>
                     <el-dropdown-item command="markException">标记异常</el-dropdown-item>
                     <el-dropdown-item command="fileUploadWithTag">文件上传</el-dropdown-item>
+                    <el-dropdown-item command="pickup">提货预约</el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
@@ -858,6 +859,19 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 添加 AppointmentModal 组件到模板 -->
+    <AppointmentModal
+      :visible="pickupModalVisible"
+      :current-appointment="pickupAppointmentData"
+      :edit-mode="pickupEditMode" 
+      @save="handlePickupModalSave" 
+      @close="closePickupModal"
+      :min-date="null" 
+      :available-time-slots="fixedTimeSlots" 
+      :appointments="tableData" 
+      :appointment-settings="mockAppointmentSettings"
+    />
   </div>
 </template>
 
@@ -872,6 +886,7 @@ import GpsTrackDialog from '@/components/logistics/GpsTrackDialog.vue';
 import VehicleAssignmentDialog from '@/components/logistics/VehicleAssignmentDialog.vue'
 import UploadPodDialog from '@/components/logistics/UploadPodDialog.vue';
 import FileUploadWithTagDialog from '@/components/logistics/FileUploadWithTagDialog.vue';
+import AppointmentModal from '@/components/AppointmentModal.vue'; // Import AppointmentModal
 import supplierDeliveryOrdersColumns from '@/assets/json/supplierDeliveryOrdersColumns.json';
 import supplierDeliveryOrdersData from '@/assets/json/supplierDeliveryOrdersData.json';
 import childTableColumns from '@/assets/json/childTableSupplier.json';
@@ -899,6 +914,7 @@ export default {
     FileUploadWithTagDialog,
     PictureFilled,
     Document,
+    AppointmentModal, // Register AppointmentModal
   },
   setup() {
     // 基础数据
@@ -1310,6 +1326,9 @@ export default {
     // 处理下拉菜单命令
     const handleCommand = (command, row) => {
       switch (command) {
+        case 'pickup': // Add pickup case
+          handlePickupAppointment(row); 
+          break;
         case 'vehicleAssignment':
           openVehicleAssignment(row);
           break;
@@ -2714,6 +2733,146 @@ export default {
       });
     };
 
+    // --- 新增：提货预约弹窗状态 ---
+    const pickupModalVisible = ref(false);
+    const pickupAppointmentData = ref(null);
+    const currentPickupOrderRow = ref(null); // Renamed for clarity
+    const pickupEditMode = ref(false); 
+    // --- 结束：新增状态 ---
+
+    // --- 新增：提货预约相关方法 ---
+    const getInitialPickupData = () => {
+      // Reusing the same structure from AppointmentModal
+      return {
+        id: null, trainNumber: '', supplierName: '', 
+        appointmentDate: '', appointmentTime: '', 
+        driverPhone: '', cargoType: '', loadType: '', 
+        createdAt: null, updatedAt: null, 
+        isCheckedIn: false, isLoaded: false,
+      };
+    };
+
+    const handlePickupAppointment = (row) => {
+      console.log("Handling pickup appointment for order:", row);
+      currentPickupOrderRow.value = row; 
+      let cargoType = '';
+      // Assuming loadingType exists, otherwise adapt field name
+      if (row.loadingType === '地板') {
+        cargoType = '地板';
+      } else if (row.loadingType === '卡板') {
+        cargoType = '卡板';
+      } else if (row.loadingType === '混装') {
+        cargoType = '地板'; // Mixed load uses floor pool
+      } else {
+          cargoType = row.loadingType || ''; // Fallback
+      }
+
+      if (row.pickupAppointmentTime) { // Check if pickup time already exists
+        pickupEditMode.value = true;
+        const [datePart, timePart] = row.pickupAppointmentTime.split(' ');
+        pickupAppointmentData.value = {
+          ...getInitialPickupData(),
+           id: row.orderNumber, // Use orderNumber as potential ID if modal needs it
+           trainNumber: row.orderNumber, // Map orderNumber to trainNumber for modal
+           supplierName: row.supplier,   
+           driverPhone: row.driverPhone, 
+           cargoType: cargoType,          
+           appointmentDate: datePart || '', // Pre-fill date
+           appointmentTime: timePart || '', // Pre-fill time
+           loadType: row.loadType || '' // Pre-fill load type if available
+        };
+         console.log("Prepared pickup data (Edit Mode):", pickupAppointmentData.value);
+      } else {
+        pickupEditMode.value = false;
+        pickupAppointmentData.value = {
+          ...getInitialPickupData(),
+          trainNumber: row.orderNumber, // Map orderNumber 
+          supplierName: '供应商A', // 设置默认供应商 
+          driverPhone: row.driverPhone, 
+          cargoType: cargoType
+          // loadType to be selected by user
+        };
+         console.log("Prepared pickup data (New Mode):", pickupAppointmentData.value);
+      }
+      
+      pickupModalVisible.value = true;
+    };
+
+    const closePickupModal = () => {
+      pickupModalVisible.value = false;
+      pickupAppointmentData.value = null;
+      currentPickupOrderRow.value = null; 
+      pickupEditMode.value = false; // Reset mode
+    };
+
+    const handlePickupModalSave = (savedData) => {
+      console.log("Pickup modal saved:", savedData);
+      if (currentPickupOrderRow.value) {
+        const index = tableData.value.findIndex(item => item.orderNumber === currentPickupOrderRow.value.orderNumber); 
+        if (index !== -1) {
+          const pickupTime = `${savedData.appointmentDate} ${savedData.appointmentTime}`;
+          tableData.value[index].pickupAppointmentTime = pickupTime; 
+          console.log(`Updated pickupAppointmentTime for order ${currentPickupOrderRow.value.orderNumber} to ${pickupTime}`);
+          applyFiltersAndPagination(); // Refresh display
+        } else {
+          console.error("Could not find original order row to update pickup time");
+        }
+        closePickupModal();
+        ElMessage.success('提货预约已保存');
+      } else {
+          console.error("currentPickupOrderRow is null during save");
+          ElMessage.error('保存预约失败，请重试');
+      }
+    };
+    // --- 结束：新增方法 ---
+
+    // --- 新增：模拟预约设置数据 ---
+    const mockAppointmentSettings = ref({
+      // 更新示例数据，确保有明确的卡板和地板容量
+      '2024-05-28': {
+        isOpen: true,
+        timeSlots: {
+          '08:00:00': { floor: 5, pallet: 3 }, // 地板:5, 卡板:3
+          '09:00:00': { floor: 5, pallet: 3 },
+          '10:00:00': { floor: 4, pallet: 2 },
+          '11:00:00': { floor: 4, pallet: 2 },
+          '13:00:00': { floor: 6, pallet: 4 },
+          '14:00:00': { floor: 6, pallet: 4 },
+          '15:00:00': { floor: 5, pallet: 3 },
+          '16:00:00': { floor: 5, pallet: 3 },
+          '17:00:00': { floor: 2, pallet: 1 }  // 假设下午容量减少
+        }
+      },
+       '2024-05-29': {
+          isOpen: true,
+          timeSlots: {
+            '09:00:00': { floor: 3, pallet: 1 },
+            '10:00:00': { floor: 3, pallet: 1 },
+            '11:00:00': { floor: 0, pallet: 2 }, // 假设 11点 只有卡板
+            '14:00:00': { floor: 4, pallet: 0 }, // 假设 14点 只有地板
+            '15:00:00': { floor: 4, pallet: 2 }
+          }
+       },
+       '2024-05-30': { // 添加更多日期示例
+            isOpen: true,
+            timeSlots: {
+              '08:00:00': { floor: 2, pallet: 2 },
+              '09:00:00': { floor: 2, pallet: 2 },
+              '10:00:00': { floor: 1, pallet: 1 }
+            }
+       },
+       '2024-05-31': { isOpen: false, timeSlots: {} } // 示例：关闭预约的日期
+    });
+    // --- 结束：模拟数据 ---
+
+    // --- 新增：固定的时间段列表 ---
+    const fixedTimeSlots = ref([
+      '08:00:00', '09:00:00', '10:00:00', '11:00:00', 
+      '13:00:00', '14:00:00', '15:00:00', '16:00:00', '17:00:00'
+      // 您可以根据需要调整这些时间
+    ]);
+    // --- 结束：固定时间段 ---
+
     return {
       // 基础数据
       tableColumns,
@@ -2893,6 +3052,17 @@ export default {
       saveEditExpense,
       handleDeleteExpense,
       handleExpensePull,
+      // --- 新增：导出提货预约相关 ---
+      pickupModalVisible,
+      pickupAppointmentData,
+      currentPickupOrderRow,
+      pickupEditMode,
+      handlePickupAppointment,
+      handlePickupModalSave,
+      closePickupModal,
+      mockAppointmentSettings, // Export mock settings
+      fixedTimeSlots // Export fixed time slots
+      // --- 结束：新增导出 ---
     };
   }
 };

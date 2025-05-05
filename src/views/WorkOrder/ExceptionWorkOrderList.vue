@@ -170,6 +170,9 @@
             </el-link>
             <span v-else>-</span>
           </template>
+          <template #default="scope" v-else-if="col.prop === 'remarks'">
+            {{ scope.row.remarks }}
+          </template>
           <template #default="scope" v-else-if="col.prop === 'assignee'">
             {{ scope.row.assignee || '未指派' }}
           </template>
@@ -182,19 +185,6 @@
           </template>
         </el-table-column>
       </groupable-table>
-
-      <!-- 分页 -->
-      <div class="pagination-container">
-        <el-pagination
-          v-model:current-page="pagination.current"
-          v-model:page-size="pagination.pageSize"
-          :total="pagination.total"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange">
-        </el-pagination>
-      </div>
     </el-card>
 
     <!-- 筛选面板 -->
@@ -410,6 +400,7 @@ const workOrderList = ref([
     assignee: '李四',
     createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
     updatedAt: new Date(),
+    remarks: '客户要求尽快处理，已电话沟通。' // 新增备注字段
   },
   {
     id: 'WO202307250005',
@@ -423,6 +414,7 @@ const workOrderList = ref([
     assignee: '财务',
     createdAt: new Date(Date.now() - 72 * 60 * 60 * 1000),
     updatedAt: new Date(Date.now() - 48 * 60 * 60 * 1000),
+    remarks: '退款已完成，请财务核对。' // 新增备注字段
   },
   {
     id: 'WO202307250007',
@@ -436,6 +428,7 @@ const workOrderList = ref([
     assignee: '客服团队',
     createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000),
     updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+    remarks: '差异数量：-2，需核实库存。' // 新增备注字段
   }
 ]);
 
@@ -705,6 +698,7 @@ const tableColumns = ref([
   { prop: 'priority', label: '优先级', width: 80, visible: true },
   { prop: 'exceptionType', label: '异常类型', width: 120, visible: true },
   { prop: 'orderNo', label: '关联订单', width: 150, visible: true },
+  { prop: 'remarks', label: '备注', minWidth: 150, visible: true },
   { prop: 'creator', label: '创建人', width: 100, visible: true },
   { prop: 'assignee', label: '当前处理人', width: 100, visible: true },
   { prop: 'createdAt', label: '创建时间', width: 180, visible: true },
@@ -718,7 +712,8 @@ const groupableFields = ref([
   { prop: 'priority', label: '优先级' },
   { prop: 'exceptionType', label: '异常类型' },
   { prop: 'creator', label: '创建人' },
-  { prop: 'assignee', label: '处理人' }
+  { prop: 'assignee', label: '处理人' },
+  // { prop: 'remarks', label: '备注' } // 备注通常不适合分组，如有需要可取消注释
 ]);
 
 // 可排序字段
@@ -726,7 +721,8 @@ const sortableFields = ref([
   { prop: 'createdAt', label: '创建时间' },
   { prop: 'updatedAt', label: '更新时间' },
   { prop: 'priority', label: '优先级' },
-  { prop: 'status', label: '状态' }
+  { prop: 'status', label: '状态' },
+  // { prop: 'remarks', label: '备注' } // 备注通常不适合排序，如有需要可取消注释
 ]);
 
 // 计算可见列
@@ -879,7 +875,7 @@ const resetColumnSettings = () => {
 const initColumnSettings = () => {
   columnSettingsList.value = tableColumns.value.map(col => ({
     ...col,
-    visible: true
+    visible: true // 确保新加的列默认可见
   }));
 };
 

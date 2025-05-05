@@ -149,6 +149,11 @@
             {{ formatDateTime(scope.row.updatedAt) }}
           </template>
         </el-table-column>
+        <el-table-column label="备注" prop="memo" width="150">
+          <template #default="scope">
+            {{ scope.row.memo }}
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="150" fixed="right">
           <template #default="scope">
             <el-button link type="primary" @click="viewWorkOrder(scope.row.id)">查看</el-button>
@@ -237,6 +242,7 @@ const workOrderList = ref([
     assignee: '李四',
     createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
     updatedAt: new Date(),
+    memo: '客户反馈订单延迟问题',
   },
   {
     id: 'WO202307250002',

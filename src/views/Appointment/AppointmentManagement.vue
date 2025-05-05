@@ -162,14 +162,15 @@
         </el-table-column>
         
         <!-- CRDD列 -->
-        <el-table-column prop="crdd" label="CRDD" width="120">
+        <el-table-column prop="crdd" label="CRDD" width="160">
           <template #default="scope">
             <div v-if="!scope.row.isGroup" class="editable-cell" @dblclick="handleCellDbClick(scope.row, 'crdd')">
               <el-date-picker
                 v-if="editingCell.rowId === scope.row.id && editingCell.prop === 'crdd'"
                 v-model="editingCell.value"
-                type="date"
+                type="datetime"
                 size="small"
+                value-format="YYYY-MM-DD HH:mm:ss"
                 @blur="handleCellEditConfirm(scope.row, 'crdd')"
                 v-focus
               />
@@ -251,6 +252,31 @@
               </el-select>
               <el-tag v-else :type="getStatusType(scope.row.status)">
                 {{ getStatusText(scope.row.status) }}
+              </el-tag>
+            </div>
+          </template>
+        </el-table-column>
+        
+        <!-- 异常状态列 -->
+        <el-table-column prop="abnormalStatus" label="异常状态" width="120">
+          <template #default="scope">
+            <div v-if="!scope.row.isGroup" class="editable-cell" @dblclick="handleCellDbClick(scope.row, 'abnormalStatus')">
+              <el-select
+                v-if="editingCell.rowId === scope.row.id && editingCell.prop === 'abnormalStatus'"
+                v-model="editingCell.value"
+                size="small"
+                @blur="handleCellEditConfirm(scope.row, 'abnormalStatus')"
+                @change="handleCellEditConfirm(scope.row, 'abnormalStatus')"
+                v-focus
+              >
+                <el-option label="正常" value="normal"></el-option>
+                <el-option label="NCNS" value="ncns"></el-option>
+                <el-option label="卖约" value="sold"></el-option>
+                <el-option label="亚马逊删约" value="amazon_deleted"></el-option>
+                <el-option label="其他异常" value="other"></el-option>
+              </el-select>
+              <el-tag v-else :type="getAbnormalStatusType(scope.row.abnormalStatus)">
+                {{ getAbnormalStatusText(scope.row.abnormalStatus) }}
               </el-tag>
             </div>
           </template>
@@ -350,9 +376,9 @@
         <el-form-item label="CRDD" prop="crdd">
           <el-date-picker
             v-model="currentAppointment.crdd"
-            type="date"
+            type="datetime"
             placeholder="选择CRDD"
-            value-format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD HH:mm:ss"
           />
         </el-form-item>
         <el-form-item label="预约类型" prop="appointmentType">
@@ -383,6 +409,15 @@
             <el-option label="已使用" value="used"></el-option>
             <el-option label="亚马逊删约" value="amazon_deleted"></el-option>
             <el-option label="删约" value="deleted"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="异常状态" prop="abnormalStatus">
+          <el-select v-model="currentAppointment.abnormalStatus" placeholder="请选择异常状态">
+            <el-option label="正常" value="normal"></el-option>
+            <el-option label="NCNS" value="ncns"></el-option>
+            <el-option label="卖约" value="sold"></el-option>
+            <el-option label="亚马逊删约" value="amazon_deleted"></el-option>
+            <el-option label="其他异常" value="other"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="跟进记录" prop="followUpRecord">
@@ -632,16 +667,16 @@ export default {
       tableData: [
         // 模拟数据
         {
-          id: '1', platform: 'Amazon', warehouseCode: 'ONT9', account: 'Acc1', appointmentId: 'AP001', appointmentTime: '2024-07-30 10:00:00', earliestAppointmentTime: '2024-07-29 09:00:00', status: 'unused', followUpRecord: '首次录入', memo: '加急', pcNumber: 'PC001', crdd: '2024-07-28', appointmentType: 'floor'
+          id: '1', platform: 'Amazon', warehouseCode: 'ONT9', account: 'Acc1', appointmentId: 'AP001', appointmentTime: '2024-07-30 10:00:00', earliestAppointmentTime: '2024-07-29 09:00:00', status: 'unused', followUpRecord: '首次录入', memo: '加急', pcNumber: 'PC001', crdd: '2024-07-28 00:00:00', appointmentType: 'floor'
         },
         {
-          id: '2', platform: 'Amazon', warehouseCode: 'LAX9', account: 'Acc2', appointmentId: 'AP002', appointmentTime: '2024-07-31 14:30:00', earliestAppointmentTime: '2024-07-30 08:00:00', status: 'used', followUpRecord: '已送达', memo: '', pcNumber: 'PC002', crdd: '2024-07-29', appointmentType: 'pallet'
+          id: '2', platform: 'Amazon', warehouseCode: 'LAX9', account: 'Acc2', appointmentId: 'AP002', appointmentTime: '2024-07-31 14:30:00', earliestAppointmentTime: '2024-07-30 08:00:00', status: 'used', followUpRecord: '已送达', memo: '', pcNumber: 'PC002', crdd: '2024-07-29 12:00:00', appointmentType: 'pallet'
         },
         {
-          id: '3', platform: 'Walmart', warehouseCode: 'WMT-CA1', account: 'Acc3', appointmentId: 'AP003', appointmentTime: '2024-08-01 11:00:00', earliestAppointmentTime: '2024-07-31 10:00:00', status: 'amazon_deleted', followUpRecord: '联系客户重新预约', memo: '货多', pcNumber: 'PC003', crdd: '2024-07-30', appointmentType: 'floor'
+          id: '3', platform: 'Walmart', warehouseCode: 'WMT-CA1', account: 'Acc3', appointmentId: 'AP003', appointmentTime: '2024-08-01 11:00:00', earliestAppointmentTime: '2024-07-31 10:00:00', status: 'amazon_deleted', followUpRecord: '联系客户重新预约', memo: '货多', pcNumber: 'PC003', crdd: '2024-07-30 08:30:00', appointmentType: 'floor'
         },
         {
-           id: '4', platform: 'Amazon', warehouseCode: 'ONT8', account: 'Acc1', appointmentId: 'AP004', appointmentTime: '2024-08-02 16:00:00', earliestAppointmentTime: '2024-08-01 14:00:00', status: 'deleted', followUpRecord: '客户取消', memo: '', pcNumber: 'PC004', crdd: '2024-07-31', appointmentType: 'pallet'
+           id: '4', platform: 'Amazon', warehouseCode: 'ONT8', account: 'Acc1', appointmentId: 'AP004', appointmentTime: '2024-08-02 16:00:00', earliestAppointmentTime: '2024-08-01 14:00:00', status: 'deleted', followUpRecord: '客户取消', memo: '', pcNumber: 'PC004', crdd: '2024-07-31 15:00:00', appointmentType: 'pallet'
         }
       ],
       displayData: [],
@@ -714,6 +749,7 @@ export default {
         appointmentTime: '',
         earliestAppointmentTime: '',
         status: 'unused', // 默认状态
+        abnormalStatus: 'normal', // 默认异常状态
         followUpRecord: '',
         memo: '',
         pcNumber: '',
@@ -746,7 +782,7 @@ export default {
         { prop: 'account', label: '预约账户', width: 120, sortable: true },
         { prop: 'appointmentId', label: '预约号', width: 150, sortable: true },
         { prop: 'pcNumber', label: 'PC号', width: 120, sortable: true },
-        { prop: 'crdd', label: 'CRDD', width: 120, sortable: true, filterType: 'date' },
+        { prop: 'crdd', label: 'CRDD', width: 160, sortable: true, filterType: 'datetime' },
         { prop: 'appointmentType', label: '预约类型', width: 120, sortable: true, filterType: 'select',
           filterOptions: [
             { label: '地板', value: 'floor' },
@@ -761,6 +797,15 @@ export default {
             { label: '已使用', value: 'used' },
             { label: '亚马逊删约', value: 'amazon_deleted' },
             { label: '删约', value: 'deleted' }
+          ]
+        },
+        { prop: 'abnormalStatus', label: '异常状态', width: 120, sortable: true, filterType: 'select',
+          filterOptions: [
+            { label: '正常', value: 'normal' },
+            { label: 'NCNS', value: 'ncns' },
+            { label: '卖约', value: 'sold' },
+            { label: '亚马逊删约', value: 'amazon_deleted' },
+            { label: '其他异常', value: 'other' }
           ]
         },
         { prop: 'followUpRecord', label: '跟进记录', minWidth: 150, sortable: false },
@@ -992,6 +1037,7 @@ export default {
         appointmentTime: '',
         earliestAppointmentTime: '',
         status: 'unused',
+        abnormalStatus: 'normal',
         followUpRecord: '',
         memo: '',
         pcNumber: '',
@@ -1293,6 +1339,29 @@ export default {
         this.viewOptionsDialogVisible = false;
         this.contextMenuVisible = false;
       }).catch(() => {});
+    },
+    
+    // 添加异常状态相关方法
+    getAbnormalStatusType(status) {
+      const statusMap = {
+        normal: 'success',    // 正常
+        ncns: 'danger',      // NCNS
+        sold: 'warning',     // 卖约
+        amazon_deleted: 'danger', // 亚马逊删约
+        other: 'info'        // 其他异常
+      };
+      return statusMap[status] || 'info';
+    },
+    
+    getAbnormalStatusText(status) {
+      const statusMap = {
+        normal: '正常',
+        ncns: 'NCNS',
+        sold: '卖约',
+        amazon_deleted: '亚马逊删约',
+        other: '其他异常'
+      };
+      return statusMap[status] || '未知';
     }
   },
   created() {

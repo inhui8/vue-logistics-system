@@ -7,6 +7,8 @@
   { "prop": "destination", "label": "目的地", "width": 150, "sortable": true },
   { "prop": "palletCount", "label": "板数", "width": 100, "sortable": true },
   { "prop": "weight", "label": "重量", "width": 100, "sortable": true },
+  { "prop": "loadingType", "label": "装车类型", "width": 100, "sortable": true },
+  { "prop": "BoxCount", "label": "箱数", "width": 160, "sortable": true},
   { "prop": "rank", "label": "优先级", "width": 100, "sortable": true },
   { "prop": "volume", "label": "方数", "width": 100, "sortable": true },
   { "prop": "DriverStartTime", "label": "司机出发时间", "width": 120, "sortable": true, "filterType": "datetime" },

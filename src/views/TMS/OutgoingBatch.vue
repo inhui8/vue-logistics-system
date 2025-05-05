@@ -237,7 +237,20 @@
           label="跟进记录" 
           width="120" 
           show-overflow-tooltip
-        ></el-table-column>
+        >
+          <template #default="scope">
+            <div class="follow-record-cell">
+              <el-badge v-if="scope.row.hasNewFollowUp" value="新" class="follow-badge">
+                <span class="follow-text" @click="handleFollowUp(scope.row)">
+                  {{ scope.row.followUpRecord || '查看' }}
+                </span>
+              </el-badge>
+              <span v-else class="follow-text" @click="handleFollowUp(scope.row)">
+                {{ scope.row.followUpRecord || '查看' }}
+              </span>
+            </div>
+          </template>
+        </el-table-column>
         
         <!-- 备注 -->
         <el-table-column 
@@ -298,14 +311,26 @@
         <!-- 操作 -->
         <el-table-column 
           label="操作" 
-          width="120" 
+          width="150" 
           fixed="right" 
           align="center"
         >
         <template #default="scope">
           <div class="operation-buttons">
             <el-button type="text" size="small" @click="handleDetail(scope.row)" class="operation-btn">详情</el-button>
-            <el-button type="text" size="small" @click="handleMore(scope.row)" class="operation-btn">更多</el-button>
+            <el-dropdown @command="command => handleCommand(command, scope.row)" trigger="click">
+              <el-button type="text" size="small" class="operation-btn">
+                更多<i class="el-icon-arrow-down el-icon--right"></i>
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="memo">MEMO</el-dropdown-item>
+                  <el-dropdown-item command="followUp">跟进记录</el-dropdown-item>
+                  <el-dropdown-item command="markException">标记异常</el-dropdown-item>
+                  <el-dropdown-item command="uploadFile">文件上传</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
           </div>
         </template>
       </el-table-column>
@@ -378,6 +403,41 @@
       @apply-filters="handleApplyFilters"
       @cancel="handleFilterCancel"
     />
+    <FollowUp
+      v-model:visible="followUpDialogVisible"
+      :records="followUpRecords"
+      @submit="handleFollowUpSubmit"
+    />
+    <FileUploadWithTagDialog
+      v-model:visible="fileUploadDialogVisible"
+      :batch="currentBatch"
+      @submit="handleFileUploadSubmit"
+      @cancel="handleFileUploadCancel"
+    />
+    
+    <!-- Memo对话框 -->
+    <el-dialog
+      title="MEMO"
+      v-model="memoDialogVisible"
+      width="500px"
+    >
+      <el-form :model="memoForm" label-width="80px">
+        <el-form-item label="备注">
+          <el-input
+            v-model="memoForm.memo"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入备注信息"
+          ></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="memoDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="saveMemo">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -388,14 +448,22 @@ import AddTrainDialog from '@/components/logistics/AddTrainDialog.vue';
 import batchColumns from '@/assets/data/batchColumns.json';
 import batchData from '@/assets/data/batchData.json';
 import FilterPanel from '@/components/logistics/FilterPanel.vue';
+import FollowUp from '@/components/logistics/follow_up.vue';
+import FileUploadWithTagDialog from '@/components/logistics/FileUploadWithTagDialog.vue';
+import { useRouter } from 'vue-router';
+import { ElMessage, ElMessageBox } from 'element-plus';
+
 export default {
   name: 'OutgoingBatchView',
   components: {
     DataTable,
     AddTrainDialog,
-    FilterPanel
+    FilterPanel,
+    FollowUp,
+    FileUploadWithTagDialog
   },
   setup() {
+    const router = useRouter();
     const loading = ref(false);
     const currentStatus = ref('all');
     const sendOrder = ref('all');
@@ -403,6 +471,19 @@ export default {
     const goToPage = ref('');
     const dateRange = ref([]);
     const addTrainDialogVisible = ref(false);
+    
+    // 新增Dialog相关状态
+    const memoDialogVisible = ref(false);
+    const followUpDialogVisible = ref(false);
+    const fileUploadDialogVisible = ref(false);
+    const currentBatch = ref(null);
+    const memoForm = ref({
+      memo: ''
+    });
+    const followUpRecords = ref([]);
+
+    // 记录哪些批次已查看跟进记录
+    const viewedFollowUps = ref({});
     
     // 筛选面板相关变量
     const filterPanelVisible = ref(false);
@@ -521,10 +602,140 @@ export default {
     // 行操作
     const handleDetail = (row) => {
       console.log('查看详情:', row);
+      router.push(`/tms/outgoing-batch-detail/${row.id || 'PC2504220106'}`);
     };
 
-    const handleMore = (row) => {
-      console.log('查看更多:', row);
+    // 新增下拉菜单命令处理方法
+    const handleCommand = (command, row) => {
+      currentBatch.value = row;
+      
+      switch (command) {
+        case 'memo':
+          handleMemo(row);
+          break;
+        case 'followUp':
+          handleFollowUp(row);
+          break;
+        case 'markException':
+          handleMarkException(row);
+          break;
+        case 'uploadFile':
+          handleFileUpload(row);
+          break;
+        default:
+          console.log('未知命令:', command);
+      }
+    };
+
+    // 处理MEMO
+    const handleMemo = (row) => {
+      memoForm.value.memo = row.remark || '';
+      memoDialogVisible.value = true;
+    };
+
+    // 保存MEMO
+    const saveMemo = () => {
+      if (currentBatch.value) {
+        // 更新当前行的备注
+        currentBatch.value.remark = memoForm.value.memo;
+        
+        // 关闭对话框
+        memoDialogVisible.value = false;
+        
+        // 提示成功
+        ElMessage.success('备注已保存');
+      }
+    };
+
+    // 处理跟进记录
+    const handleFollowUp = (row) => {
+      // 模拟获取跟进记录
+      console.log(`获取批次${row.batchNumber}的跟进记录`);
+      
+      const mockRecords = [
+        {
+          time: '2024-05-15 10:30:00',
+          content: '已联系客户确认收货地址',
+          type: 'primary',
+          target: 'internal',
+          operator: '张三',
+          files: []
+        },
+        {
+          time: '2024-05-14 15:45:00',
+          content: '供应商已确认装车时间',
+          type: 'warning',
+          target: 'supplier',
+          operator: '李四',
+          files: []
+        }
+      ];
+      
+      // 将此批次标记为已查看跟进记录
+      if (row.id) {
+        viewedFollowUps.value[row.id] = true;
+        // 更新当前行，移除新跟进标记
+        row.hasNewFollowUp = false;
+      }
+      
+      followUpRecords.value = mockRecords;
+      followUpDialogVisible.value = true;
+      currentBatch.value = row;
+    };
+
+    // 处理跟进记录提交
+    const handleFollowUpSubmit = (data) => {
+      console.log('跟进记录已提交:', data);
+      
+      // 在实际应用中，这里应该调用API保存跟进记录
+      
+      // 模拟成功保存
+      ElMessage.success('跟进记录已保存');
+      
+      // 刷新数据
+      fetchData();
+    };
+
+    // 处理标记异常
+    const handleMarkException = (row) => {
+      ElMessageBox.confirm(`确定要标记批次 ${row.batchNumber} 为异常状态吗?`, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        // 更新批次状态或添加标签等
+        // 实际应用中应该调用API来更新row的状态
+        console.log(`标记批次${row.batchNumber}为异常状态`);
+        
+        // 可以在这里更新row对象的属性
+        // 例如: row.batchStatus = '异常';
+        
+        ElMessage.success('批次已标记为异常状态');
+      }).catch(() => {
+        // 取消操作
+      });
+    };
+
+    // 处理文件上传
+    const handleFileUpload = (row) => {
+      currentBatch.value = row;
+      fileUploadDialogVisible.value = true;
+    };
+
+    // 处理文件上传提交
+    const handleFileUploadSubmit = (formData) => {
+      console.log('文件上传表单数据:', formData);
+      
+      // 在实际应用中，这里应该调用API上传文件
+      
+      // 模拟成功上传
+      ElMessage.success('文件上传成功');
+      fileUploadDialogVisible.value = false;
+    };
+
+    // 处理文件上传取消
+    const handleFileUploadCancel = () => {
+      fileUploadDialogVisible.value = false;
     };
 
     // 显示加入车次弹窗
@@ -540,9 +751,35 @@ export default {
     
     // 处理加入车次确认
     const handleAddTrainConfirm = (data) => {
-      console.log('创建派送确认:', data);
-      // 这里处理创建派送逻辑
-      alert(`已成功创建派送，包含${data.batchCount}个出库明细`);
+      console.log('创建派送确认 - 完整数据:', data);
+      
+      // 新增字段的处理逻辑
+      console.log('车厢号:', data.trailerNumber);
+      console.log('Dock号:', data.dockNumber);
+      console.log('是否需要备货:', data.needsPreparation);
+      
+      if (data.needsPreparation) {
+        console.log('需要备货，设置装车状态为 "需要备货"');
+        // 这里可以添加实际的业务逻辑，例如更新状态或发送请求
+      } else {
+        console.log('不需要备货');
+      }
+      
+      // 提示信息可以包含新字段
+      let message = `已成功创建派送，包含${data.batchCount}个出库明细。`;
+      if (data.trailerNumber) message += ` 车厢号: ${data.trailerNumber}。`;
+      if (data.dockNumber) message += ` Dock号: ${data.dockNumber}。`;
+      message += data.needsPreparation ? ' 需要备货。' : ' 不需要备货。';
+      
+      // 模拟后台处理成功后的提示
+      // 实际应用中，应该在后台处理成功后再显示提示
+      alert(message); // 暂时使用 alert
+      
+      // 关闭弹窗等后续操作应放在实际的后台请求成功回调中
+      // addTrainDialogVisible.value = false; // 弹窗已在子组件关闭
+      
+      // 可能需要刷新表格数据以反映状态变化
+      // fetchData(); 
     };
     
     // 处理加入车次取消
@@ -659,10 +896,18 @@ export default {
       // 模拟API请求
       setTimeout(() => {
         // 从导入的JSON获取数据
-        tableData.value = batchData;
+        const data = batchData.map(item => {
+          // 为部分批次添加"有新跟进记录"标记 (随机为20%的记录添加新跟进提示)
+          return {
+            ...item,
+            hasNewFollowUp: !viewedFollowUps.value[item.id] && Math.random() < 0.2
+          };
+        });
+        
+        tableData.value = data;
         
         // 更新总条数
-        pagination.total = batchData.length;
+        pagination.total = data.length;
         
         loading.value = false;
       }, 500);
@@ -690,7 +935,14 @@ export default {
       batchNumber,
       searchText,
       addTrainDialogVisible,
-      // 新增的筛选面板相关内容
+      // 新增的对话框相关状态
+      memoDialogVisible,
+      followUpDialogVisible,
+      fileUploadDialogVisible,
+      currentBatch,
+      memoForm,
+      followUpRecords,
+      // 筛选面板相关内容
       filterPanelVisible,
       tableColumnDefinitions,
       activeFilters,
@@ -702,15 +954,25 @@ export default {
       handleSizeChange,
       handleGoToPage,
       handleDetail,
-      handleMore,
       fetchData,
       showAddTrainDialog,
       handleAddTrainConfirm,
       handleAddTrainCancel,
-      // 新增的筛选面板相关方法
+      // 新增的方法
+      handleCommand,
+      handleMemo,
+      saveMemo,
+      handleFollowUp,
+      handleFollowUpSubmit,
+      handleMarkException,
+      handleFileUpload,
+      handleFileUploadSubmit,
+      handleFileUploadCancel,
+      // 筛选面板相关方法
       showFilterPanel,
       handleApplyFilters,
-      handleFilterCancel
+      handleFilterCancel,
+      viewedFollowUps
     };
   }
 };
@@ -972,5 +1234,24 @@ export default {
 
 .date-range-picker {
   width: 260px;
+}
+
+/* 跟进记录样式 */
+.follow-record-cell {
+  cursor: pointer;
+}
+
+.follow-text {
+  color: #1890ff;
+}
+
+.follow-text:hover {
+  color: #40a9ff;
+  text-decoration: underline;
+}
+
+.follow-badge :deep(.el-badge__content) {
+  background-color: #f56c6c;
+  border: none;
 }
 </style> 

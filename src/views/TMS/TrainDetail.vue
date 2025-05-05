@@ -94,45 +94,9 @@
           
           <el-table :data="pcDetailData" border style="width: 100%">
             <el-table-column prop="pcNumber" label="PC号" width="120"></el-table-column>
-            <el-table-column prop="palletCount" label="板数" width="80">
+            <el-table-column prop="appointmentParty" label="预约方" width="100">
               <template #default="scope">
-                <el-input-number 
-                  v-model="scope.row.palletCount" 
-                  size="small" 
-                  :min="0" 
-                  style="width: 80px">
-                </el-input-number>
-              </template>
-            </el-table-column>
-            <el-table-column prop="weight" label="重量" width="100">
-              <template #default="scope">
-                <el-input-number 
-                  v-model="scope.row.weight" 
-                  size="small" 
-                  :min="0" 
-                  :precision="2"
-                  style="width: 100px">
-                </el-input-number>
-              </template>
-            </el-table-column>
-            <el-table-column prop="volume" label="方数" width="100">
-              <template #default="scope">
-                <el-input-number 
-                  v-model="scope.row.volume" 
-                  size="small" 
-                  :min="0" 
-                  :precision="2"
-                  style="width: 100px">
-                </el-input-number>
-              </template>
-            </el-table-column>
-            <el-table-column prop="appointmentNumber" label="预约号" width="120">
-              <template #default="scope">
-                <el-input 
-                  v-model="scope.row.appointmentNumber" 
-                  size="small" 
-                  style="width: 120px">
-                </el-input>
+                <el-input v-model="scope.row.appointmentParty" size="small" style="width: 100px"></el-input>
               </template>
             </el-table-column>
             <el-table-column prop="appointmentTime" label="预约时间" width="150">
@@ -146,16 +110,53 @@
                 </el-date-picker>
               </template>
             </el-table-column>
-            <el-table-column prop="appointmentParty" label="预约方" width="100">
+            <el-table-column prop="appointmentNumber" label="预约号" width="120">
               <template #default="scope">
                 <el-input 
-                  v-model="scope.row.appointmentParty" 
+                  v-model="scope.row.appointmentNumber" 
                   size="small" 
-                  style="width: 100px">
+                  style="width: 120px">
                 </el-input>
               </template>
             </el-table-column>
-            <el-table-column prop="status" label="状态" width="100">
+            <el-table-column prop="startWarehouse" label="起始仓库" width="120" sortable></el-table-column>
+            <el-table-column prop="destination" label="目的地" width="150" sortable></el-table-column>
+            <el-table-column prop="palletCount" label="板数" width="100" sortable>
+              <template #default="scope">
+                <el-input v-model.number="scope.row.palletCount" type="number" min="0" size="small" style="width: 80px"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column prop="weight" label="重量(kg)" width="120" sortable>
+              <template #default="scope">
+                <el-input v-model.number="scope.row.weight" type="number" min="0" size="small" step="0.01" style="width: 100px"></el-input> 
+              </template>
+            </el-table-column>
+            <el-table-column prop="loadingType" label="装车类型" width="100" sortable>
+              <template #default="scope">
+                <el-select v-model="scope.row.loadingType" size="small" style="width: 100px">
+                  <el-option label="卡板" value="卡板"></el-option>
+                  <el-option label="地板" value="地板"></el-option>
+                  <el-option label="混装" value="混装"></el-option>
+                  <el-option label="快递" value="快递"></el-option>
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column prop="boxCount" label="箱数" width="100" sortable>
+               <template #default="scope">
+                <el-input v-model.number="scope.row.boxCount" type="number" min="0" size="small" style="width: 80px"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column prop="priority" label="优先级" width="90" sortable>
+               <template #default="scope">
+                <el-input v-model.number="scope.row.priority" type="number" min="1" size="small" style="width: 70px"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column prop="volume" label="方数(m³)" width="120" sortable> 
+              <template #default="scope">
+                <el-input v-model.number="scope.row.volume" type="number" min="0" size="small" step="0.01" style="width: 100px"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column prop="status" label="状态" width="100" sortable>
               <template #default="scope">
                 <el-tag :type="getPCStatusTagType(scope.row.status)">{{ scope.row.status }}</el-tag>
               </template>
@@ -526,11 +527,15 @@
         <div class="file-upload-section">
           <div class="upload-header">
             <h3 class="section-title">文件管理</h3>
-            <el-button type="primary" @click="showFileUploadDialog">上传文件</el-button>
+            <div>
+              <el-button type="primary" size="small" @click="showFileUploadDialog">上传文件</el-button>
+              <el-button type="success" size="small" @click="handleBatchApprove">批量审核</el-button>
+            </div>
           </div>
           
           <!-- 文件列表 -->
-          <el-table :data="fileList" border style="width: 100%">
+          <el-table :data="fileList" border style="width: 100%" @selection-change="handleFileSelectionChange">
+            <el-table-column type="selection" width="55"></el-table-column>
             <el-table-column prop="fileName" label="文件名" min-width="200"></el-table-column>
             <el-table-column prop="fileType" label="文件类型" width="120">
               <template #default="scope">
@@ -540,12 +545,11 @@
             <el-table-column prop="fileSize" label="文件大小" width="120"></el-table-column>
             <el-table-column prop="uploadTime" label="上传时间" width="180"></el-table-column>
             <el-table-column prop="uploadBy" label="上传人" width="120"></el-table-column>
-            <el-table-column prop="podStatus" label="POD审核状态" width="120">
+            <el-table-column prop="status" label="审核状态" width="120">
               <template #default="scope">
-                <el-tag :type="getPodStatusTagType(scope.row.podStatus)" v-if="scope.row.fileType === 'pod'">
-                  {{ getPodStatusLabel(scope.row.podStatus) }}
+                <el-tag :type="getPodStatusTagType(scope.row.status)">
+                  {{ getPodStatusLabel(scope.row.status) }}
                 </el-tag>
-                <span v-else>-</span>
               </template>
             </el-table-column>
             <el-table-column prop="remark" label="备注" min-width="150"></el-table-column>
@@ -559,11 +563,10 @@
                     <el-dropdown-menu>
                       <el-dropdown-item command="preview">预览</el-dropdown-item>
                       <el-dropdown-item command="download">下载</el-dropdown-item>
-                      <template v-if="scope.row.fileType === 'pod'">
-                        <el-dropdown-item command="view">查看文件</el-dropdown-item>
-                        <el-dropdown-item command="approve" v-if="scope.row.podStatus === 'pending'">审核通过</el-dropdown-item>
-                        <el-dropdown-item command="reject" v-if="scope.row.podStatus === 'pending'">审核不通过</el-dropdown-item>
-                      </template>
+                      <el-dropdown-item command="approve" v-if="scope.row.status === 'pending'">审核通过</el-dropdown-item>
+                      <el-dropdown-item command="reject" v-if="scope.row.status === 'pending'">审核不通过</el-dropdown-item>
+                      <el-dropdown-item command="pushCustomerService" v-if="scope.row.status === 'approved'">推送客服</el-dropdown-item>
+                      <el-dropdown-item command="pushCustomer" v-if="scope.row.status === 'approved'">推送客户</el-dropdown-item>
                       <el-dropdown-item command="delete">删除</el-dropdown-item>
                     </el-dropdown-menu>
                   </template>
@@ -607,6 +610,44 @@
       @submit="handleFileUploadWithTagSubmit"
       @cancel="handleFileUploadWithTagCancel"
     />
+
+    <!-- 添加PC对话框 -->
+    <el-dialog title="添加PC到运单" v-model="addPcDialogVisible" width="70%">
+      <el-input
+        v-model="searchPcQuery"
+        placeholder="搜索PC号"
+        size="small"
+        clearable
+        style="margin-bottom: 10px; width: 300px;"
+      ></el-input>
+      <el-table
+        :data="filteredAvailablePcs"
+        border
+        style="width: 100%"
+        height="400px"
+        @selection-change="handleAvailablePcSelectionChange"
+      >
+        <el-table-column type="selection" width="55"></el-table-column>
+        <el-table-column prop="pcNumber" label="PC号" width="150"></el-table-column>
+        <el-table-column prop="appointmentParty" label="预约方" width="100"></el-table-column>
+        <el-table-column prop="appointmentTime" label="预约时间" width="160"></el-table-column>
+        <el-table-column prop="appointmentNumber" label="预约号" width="120"></el-table-column>
+        <el-table-column prop="startWarehouse" label="起始仓库" width="120"></el-table-column>
+        <el-table-column prop="destination" label="目的地" width="150"></el-table-column>
+        <el-table-column prop="palletCount" label="板数" width="80"></el-table-column>
+        <el-table-column prop="weight" label="重量(kg)" width="100"></el-table-column>
+        <el-table-column prop="loadingType" label="装车类型" width="100"></el-table-column>
+        <el-table-column prop="boxCount" label="箱数" width="80"></el-table-column>
+        <el-table-column prop="priority" label="优先级" width="80"></el-table-column>
+        <el-table-column prop="volume" label="方数(m³)" width="100"></el-table-column>
+      </el-table>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="handleCancelAddPc">取消</el-button>
+          <el-button type="primary" @click="handleConfirmAddPc">确认添加</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -638,6 +679,9 @@ export default {
     // 文件上传弹窗显示状态
     const fileUploadDialogVisible = ref(false);
 
+    // 选中的文件
+    const selectedFiles = ref([]);
+
     // 费用明细对话框显示状态
     const expenseDialogVisible = ref(false);
     const currentExpense = ref(null);
@@ -655,7 +699,7 @@ export default {
         fileSize: '2.5MB',
         uploadTime: '2023-07-15 10:30:00',
         uploadBy: '供应商A',
-        podStatus: 'pending',
+        status: 'pending',
         remark: '供应商POD文件'
       },
       {
@@ -665,6 +709,7 @@ export default {
         fileSize: '1.2MB',
         uploadTime: '2023-07-15 11:00:00',
         uploadBy: '供应商A',
+        status: 'pending',
         remark: '发票文件'
       }
     ]);
@@ -964,7 +1009,12 @@ export default {
 
     // 添加PC
     const handleAddPC = () => {
-      ElMessage.info('添加PC功能待实现');
+      fetchAvailablePcs(); // 获取最新的可添加PC列表
+      searchPcQuery.value = ''; // 清空搜索框
+      selectedPcsToAdd.value = []; // 清空选择
+      // 确保下次打开对话框时表格选择状态被清除 (如果 Element Plus 未自动处理)
+      // 可选: find the table ref and call clearSelection()
+      addPcDialogVisible.value = true;
     };
 
     // 导出PC明细
@@ -1007,9 +1057,17 @@ export default {
               type: 'warning'
             }
           ).then(() => {
-            // 删除逻辑
-            ElMessage.success(`已删除PC ${row.pcNumber}`);
+            // --- 删除逻辑开始 ---
+            const index = pcDetailData.value.findIndex(pc => pc.pcNumber === row.pcNumber);
+            if (index !== -1) {
+              pcDetailData.value.splice(index, 1);
+              ElMessage.success(`已删除PC ${row.pcNumber}`);
+            } else {
+              ElMessage.error('未找到要删除的PC');
+            }
+            // --- 删除逻辑结束 ---
           }).catch(() => {
+            ElMessage.info('已取消删除操作');
             // 取消删除
           });
           break;
@@ -1039,6 +1097,11 @@ export default {
       fileList.value.unshift(newFile);
       ElMessage.success('文件上传成功');
       fileUploadDialogVisible.value = false;
+    };
+
+    // 处理文件表格选择变化
+    const handleFileSelectionChange = (selection) => {
+      selectedFiles.value = selection;
     };
 
     // 处理文件上传取消
@@ -1291,12 +1354,9 @@ export default {
         case 'download':
           handleDownloadFile(row);
           break;
-        case 'view':
-          handlePreviewFile(row);
-          break;
         case 'approve':
           ElMessageBox.confirm(
-            '确定要通过该POD文件的审核吗？',
+            '确定要通过该文件的审核吗？',
             '提示',
             {
               confirmButtonText: '确定',
@@ -1304,15 +1364,15 @@ export default {
               type: 'warning'
             }
           ).then(() => {
-            row.podStatus = 'approved';
-            ElMessage.success('POD审核通过');
+            row.status = 'approved';
+            ElMessage.success('文件审核通过');
           }).catch(() => {
             // 取消审核
           });
           break;
         case 'reject':
           ElMessageBox.confirm(
-            '确定要拒绝该POD文件的审核吗？',
+            '确定要拒绝该文件的审核吗？',
             '提示',
             {
               confirmButtonText: '确定',
@@ -1320,14 +1380,22 @@ export default {
               type: 'warning'
             }
           ).then(() => {
-            row.podStatus = 'rejected';
-            ElMessage.success('POD审核已拒绝');
+            row.status = 'rejected';
+            ElMessage.success('文件审核已拒绝');
           }).catch(() => {
             // 取消审核
           });
           break;
         case 'delete':
           handleDeleteFile(row);
+          break;
+        case 'pushCustomerService':
+          ElMessage.info(`推送客服: ${row.fileName}`);
+          // 推送客服逻辑
+          break;
+        case 'pushCustomer':
+          ElMessage.info(`推送客户: ${row.fileName}`);
+          // 推送客户逻辑
           break;
       }
     };
@@ -1439,6 +1507,112 @@ export default {
       currentFileRow.value = null;
     };
 
+    // 批量审核文件
+    const handleBatchApprove = () => {
+      if (selectedFiles.value.length === 0) {
+        ElMessage.warning('请选择需要审核的文件');
+        return;
+      }
+
+      const pendingFiles = selectedFiles.value.filter(file => file.status === 'pending');
+
+      if (pendingFiles.length === 0) {
+        ElMessage.warning('选中的文件都已审核，无需重复操作');
+        return;
+      }
+
+      ElMessageBox.confirm(
+        `确定要批量审核通过选中的 ${pendingFiles.length} 个文件吗？`,
+        '批量审核确认',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }
+      ).then(() => {
+        pendingFiles.forEach(file => {
+          // 找到原始列表中的文件并更新状态
+          const originalFile = fileList.value.find(f => f.id === file.id);
+          if (originalFile) {
+            originalFile.status = 'approved';
+          }
+        });
+        ElMessage.success(`已成功批量审核 ${pendingFiles.length} 个文件`);
+        // 清空选择，如果需要的话
+        // this.$refs.fileTable.clearSelection(); // Vue 2 写法，Vue 3 需要获取 ref
+      }).catch(() => {
+        ElMessage.info('已取消批量审核操作');
+      });
+    };
+
+    // 添加PC对话框相关
+    const addPcDialogVisible = ref(false);
+    const availablePcs = ref([]); // 存储可添加的PC列表
+    const searchPcQuery = ref(''); // PC搜索查询
+    const selectedPcsToAdd = ref([]); // 在对话框中选中的PC
+
+    // 模拟的可添加PC列表 (实际应从API获取，确保字段全面)
+    const fetchAvailablePcs = () => {
+      const existingPcNumbers = pcDetailData.value.map(pc => pc.pcNumber);
+      // 模拟数据，确保包含所有对话框表格中显示的字段
+      availablePcs.value = [
+        { pcNumber: 'PC777777', appointmentParty: '客户C', appointmentTime: '2024-03-10 10:00:00', appointmentNumber: 'BK777', startWarehouse: '东莞仓库', destination: '芝加哥', palletCount: 5, weight: 1000, loadingType: '卡板', boxCount: 80, priority: 1, volume: 2 },
+        { pcNumber: 'PC888888', appointmentParty: '客户D', appointmentTime: '2024-03-11 11:00:00', appointmentNumber: 'BK888', startWarehouse: '广州仓库', destination: '纽约', palletCount: 8, weight: 1800, loadingType: '地板', boxCount: 200, priority: 2, volume: 4 },
+        { pcNumber: 'PC999999', appointmentParty: '客户E', appointmentTime: '2024-03-12 15:30:00', appointmentNumber: 'BK999', startWarehouse: '深圳仓库', destination: '洛杉矶', palletCount: 12, weight: 3000, loadingType: '混装', boxCount: 150, priority: 3, volume: 6 },
+        // 过滤掉已在当前运单中的PC
+      ].filter(pc => !existingPcNumbers.includes(pc.pcNumber));
+    };
+
+    // 计算属性：过滤可添加的PC列表
+    const filteredAvailablePcs = computed(() => {
+      if (!searchPcQuery.value) {
+        return availablePcs.value;
+      }
+      return availablePcs.value.filter(pc => 
+        pc.pcNumber.toLowerCase().includes(searchPcQuery.value.toLowerCase())
+      );
+    });
+
+    // 添加PC对话框 - 处理选中项变化
+    const handleAvailablePcSelectionChange = (selection) => {
+      selectedPcsToAdd.value = selection;
+    };
+
+    // 添加PC对话框 - 确认添加
+    const handleConfirmAddPc = () => {
+      if (selectedPcsToAdd.value.length === 0) {
+        ElMessage.warning('请至少选择一个PC进行添加');
+        return;
+      }
+      // 将选中的PC添加到pcDetailData，映射所有需要的字段
+      const pcsToAdd = selectedPcsToAdd.value.map(pc => ({
+        // 从 availablePcs 复制所有已有字段
+        pcNumber: pc.pcNumber,
+        appointmentParty: pc.appointmentParty || '',
+        appointmentTime: pc.appointmentTime || '',
+        appointmentNumber: pc.appointmentNumber || '',
+        startWarehouse: pc.startWarehouse || 'N/A', // 添加起始仓库
+        destination: pc.destination || 'N/A',
+        palletCount: pc.palletCount || 0,
+        weight: pc.weight || 0,
+        loadingType: pc.loadingType || '卡板', // 添加装车类型
+        boxCount: pc.boxCount || 0,         // 添加箱数
+        priority: pc.priority || 3,         // 添加优先级
+        volume: pc.volume || 0,
+        // 添加/设置默认状态和其他主表需要的字段
+        status: '待装车',
+        remark: '' 
+      }));
+      pcDetailData.value.push(...pcsToAdd);
+      ElMessage.success(`成功添加 ${pcsToAdd.length} 个PC`);
+      addPcDialogVisible.value = false;
+    };
+
+    // 添加PC对话框 - 取消
+    const handleCancelAddPc = () => {
+      addPcDialogVisible.value = false;
+    };
+
     return {
       activeTab,
       basicInfo,
@@ -1505,7 +1679,17 @@ export default {
       currentFileRow,
       handleFileUploadWithTag,
       handleFileUploadWithTagSubmit,
-      handleFileUploadWithTagCancel
+      handleFileUploadWithTagCancel,
+      handleBatchApprove,
+      handleFileSelectionChange,
+      selectedFiles,
+      // 添加PC相关导出
+      addPcDialogVisible,
+      searchPcQuery,
+      filteredAvailablePcs,
+      handleConfirmAddPc,
+      handleCancelAddPc,
+      handleAvailablePcSelectionChange
     };
   }
 };
